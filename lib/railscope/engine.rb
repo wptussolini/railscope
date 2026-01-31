@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "subscribers/request_subscriber"
+require_relative "subscribers/query_subscriber"
 
 module Railscope
   class Engine < ::Rails::Engine
@@ -23,6 +24,10 @@ module Railscope
     initializer "railscope.subscribers", after: :load_config_initializers do
       ActiveSupport.on_load(:action_controller) do
         Railscope::Subscribers::RequestSubscriber.subscribe
+      end
+
+      ActiveSupport.on_load(:active_record) do
+        Railscope::Subscribers::QuerySubscriber.subscribe
       end
     end
   end
