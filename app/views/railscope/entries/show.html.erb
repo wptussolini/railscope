@@ -1,0 +1,93 @@
+<div class="railscope-container">
+  <header class="railscope-header">
+    <nav class="breadcrumb">
+      <%= link_to "← Back to entries", root_path, class: "back-link" %>
+    </nav>
+    <div class="entry-header">
+      <span class="type-badge <%= @entry.entry_type %>"><%= @entry.entry_type %></span>
+      <h1><%= entry_title(@entry) %></h1>
+    </div>
+  </header>
+
+  <div class="entry-detail">
+    <div class="detail-grid">
+      <div class="detail-main">
+        <section class="detail-section">
+          <h2>Details</h2>
+          <div class="detail-meta">
+            <div class="meta-item">
+              <span class="meta-label">Occurred at</span>
+              <span class="meta-value"><%= @entry.occurred_at.strftime("%Y-%m-%d %H:%M:%S.%L") %></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Entry ID</span>
+              <span class="meta-value mono"><%= @entry.id %></span>
+            </div>
+            <% if @entry.payload["request_id"] %>
+              <div class="meta-item">
+                <span class="meta-label">Request ID</span>
+                <span class="meta-value mono"><%= @entry.payload["request_id"] %></span>
+              </div>
+            <% end %>
+            <% if @entry.payload["duration"] %>
+              <div class="meta-item">
+                <span class="meta-label">Duration</span>
+                <span class="meta-value"><%= @entry.payload["duration"] %>ms</span>
+              </div>
+            <% end %>
+          </div>
+        </section>
+
+        <section class="detail-section">
+          <h2>Tags</h2>
+          <div class="tags-wrapper">
+            <% @entry.tags.each do |tag| %>
+              <%= link_to tag, root_path(tag: tag), class: "tag" %>
+            <% end %>
+          </div>
+        </section>
+
+        <section class="detail-section">
+          <h2>Payload</h2>
+          <div class="json-viewer">
+            <%= render_json(@entry.payload) %>
+          </div>
+        </section>
+
+        <% if @entry.entry_type == "exception" && @entry.payload["backtrace"].present? %>
+          <section class="detail-section">
+            <h2>Backtrace</h2>
+            <div class="backtrace">
+              <% @entry.payload["backtrace"].each_with_index do |line, i| %>
+                <div class="backtrace-line">
+                  <span class="line-number"><%= i + 1 %></span>
+                  <code><%= line %></code>
+                </div>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </div>
+
+      <div class="detail-sidebar">
+        <% if @related_entries.any? %>
+          <section class="detail-section">
+            <h2>Timeline</h2>
+            <p class="timeline-info">Events from the same request</p>
+            <div class="timeline">
+              <% @related_entries.each do |entry| %>
+                <div class="timeline-item <%= entry.id == @entry.id ? 'current' : '' %>">
+                  <%= link_to entry_path(entry), class: "timeline-link" do %>
+                    <span class="timeline-type type-badge <%= entry.entry_type %>"><%= entry.entry_type %></span>
+                    <span class="timeline-summary"><%= timeline_summary(entry) %></span>
+                    <span class="timeline-time"><%= entry.payload["duration"] ? "#{entry.payload['duration']}ms" : "" %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

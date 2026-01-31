@@ -1,4 +1,70 @@
-<div>
-  <h1>Railscope Dashboard</h1>
-  <p>Welcome to Railscope!</p>
+<div class="railscope-container">
+  <header class="railscope-header">
+    <h1>Railscope</h1>
+    <p class="subtitle"><%= @total_count %> entries</p>
+  </header>
+
+  <nav class="railscope-filters">
+    <%= link_to "All", root_path, class: "filter-btn #{@current_type.nil? ? 'active' : ''}" %>
+    <% @entry_types.each do |type| %>
+      <%= link_to type.titleize, root_path(type: type), class: "filter-btn #{@current_type == type ? 'active' : ''}" %>
+    <% end %>
+  </nav>
+
+  <div class="railscope-entries">
+    <% if @entries.any? %>
+      <table class="entries-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Summary</th>
+            <th>Tags</th>
+            <th>Occurred</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @entries.each do |entry| %>
+            <tr class="entry-row entry-type-<%= entry.entry_type %>" onclick="window.location='<%= entry_path(entry) %>'" style="cursor: pointer;">
+              <td class="entry-type">
+                <span class="type-badge <%= entry.entry_type %>"><%= entry.entry_type %></span>
+              </td>
+              <td class="entry-summary">
+                <%= link_to entry_path(entry), class: "entry-link" do %>
+                  <%= render_entry_summary(entry) %>
+                <% end %>
+              </td>
+              <td class="entry-tags">
+                <div class="tags-wrapper">
+                  <% entry.tags.each do |tag| %>
+                    <%= link_to tag, root_path(tag: tag, type: @current_type), class: "tag", onclick: "event.stopPropagation();" %>
+                  <% end %>
+                </div>
+              </td>
+              <td class="entry-time">
+                <span title="<%= entry.occurred_at %>"><%= time_ago_in_words(entry.occurred_at) %> ago</span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="empty-state">
+        <p>No entries found.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @total_pages > 1 %>
+    <nav class="railscope-pagination">
+      <% if @current_page > 1 %>
+        <%= link_to "Previous", root_path(page: @current_page - 1, type: @current_type, tag: params[:tag]), class: "page-btn" %>
+      <% end %>
+
+      <span class="page-info">Page <%= @current_page %> of <%= @total_pages %></span>
+
+      <% if @current_page < @total_pages %>
+        <%= link_to "Next", root_path(page: @current_page + 1, type: @current_type, tag: params[:tag]), class: "page-btn" %>
+      <% end %>
+    </nav>
+  <% end %>
 </div>

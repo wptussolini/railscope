@@ -21,9 +21,11 @@ module Railscope
       end
 
       def create_entry!(entry_type:, payload:, tags:)
+        filtered_payload = Railscope.filter(payload.merge(context_payload))
+
         Entry.create!(
           entry_type: entry_type,
-          payload: payload.merge(context_payload),
+          payload: filtered_payload,
           tags: (tags + context_tags).uniq,
           occurred_at: Time.current
         )
