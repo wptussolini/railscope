@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getEntries } from '@/api/entries'
 import { Entry } from '@/lib/types'
 import { timeAgo } from '@/lib/utils'
@@ -7,24 +7,32 @@ import { Card } from '@/components/ui/Card'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
+import { SearchInput } from '@/components/ui/SearchInput'
 
 export default function JobsIndex() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [filter, setFilter] = useState<'all' | 'enqueue' | 'perform'>('all')
 
+  const tagFilter = searchParams.get('tag') || ''
+
   useEffect(() => {
     loadEntries()
-  }, [page, filter])
+  }, [page, filter, tagFilter])
 
   async function loadEntries() {
     setLoading(true)
     try {
       const type = filter === 'all' ? undefined : `job_${filter}`
-      const response = await getEntries({ type, tag: filter === 'all' ? 'job' : undefined, page })
+      const response = await getEntries({
+        type,
+        tag: tagFilter || (filter === 'all' ? 'job' : undefined),
+        page
+      })
       setEntries(response.data)
       setTotalPages(response.meta.total_pages)
     } catch (error) {
@@ -34,6 +42,24 @@ export default function JobsIndex() {
     }
   }
 
+  function handleSearch(value: string) {
+    setPage(1)
+    if (value) {
+      setSearchParams({ tag: value })
+    } else {
+      setSearchParams({})
+    }
+  }
+
+  function handleFilterChange(newFilter: 'all' | 'enqueue' | 'perform') {
+    setFilter(newFilter)
+    setPage(1)
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage)
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -41,20 +67,28 @@ export default function JobsIndex() {
         <p className="text-dark-muted text-sm mt-1">Background jobs in your application</p>
       </div>
 
-      <div className="flex gap-2 mb-4">
-        {(['all', 'enqueue', 'perform'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => { setFilter(f); setPage(1) }}
-            className={`px-3 py-1.5 text-sm rounded-md border ${
-              filter === f
-                ? 'bg-blue-500 border-blue-500 text-white'
-                : 'border-dark-border text-dark-muted hover:text-dark-text'
-            }`}
-          >
-            {f === 'all' ? 'All' : f === 'enqueue' ? 'Enqueued' : 'Performed'}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="flex gap-2">
+          {(['all', 'enqueue', 'perform'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => handleFilterChange(f)}
+              className={`px-3 py-1.5 text-sm rounded-md border ${
+                filter === f
+                  ? 'bg-blue-500 border-blue-500 text-white'
+                  : 'border-dark-border text-dark-muted hover:text-dark-text'
+              }`}
+            >
+              {f === 'all' ? 'All' : f === 'enqueue' ? 'Enqueued' : 'Performed'}
+            </button>
+          ))}
+        </div>
+        <SearchInput
+          placeholder="Search by tag (failed, queue name...)"
+          value={tagFilter}
+          onChange={handleSearch}
+          className="flex-1 max-w-sm"
+        />
       </div>
 
       <Card>
@@ -78,7 +112,7 @@ export default function JobsIndex() {
             ) : entries.length === 0 ? (
               <TableRow>
                 <TableCell className="text-center text-dark-muted py-8" colSpan={5}>
-                  No jobs recorded yet.
+                  {tagFilter ? `No jobs found with tag "${tagFilter}".` : 'No jobs recorded yet.'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -112,7 +146,7 @@ export default function JobsIndex() {
             )}
           </TableBody>
         </Table>
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </Card>
     </div>
   )

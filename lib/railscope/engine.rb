@@ -5,6 +5,7 @@ require_relative "subscribers/request_subscriber"
 require_relative "subscribers/query_subscriber"
 require_relative "subscribers/exception_subscriber"
 require_relative "subscribers/job_subscriber"
+require_relative "subscribers/command_subscriber"
 
 module Railscope
   class Engine < ::Rails::Engine
@@ -45,6 +46,14 @@ module Railscope
       ActiveSupport.on_load(:active_job) do
         Railscope::Subscribers::JobSubscriber.subscribe
       end
+    end
+
+    rake_tasks do
+      # Load sample tasks for testing
+      load Railscope::Engine.root.join("lib/tasks/railscope_sample.rake")
+
+      # Subscribe to rake tasks after they're loaded
+      Railscope::Subscribers::CommandSubscriber.subscribe
     end
   end
 end

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getEntries } from '@/api/entries'
 import { Entry } from '@/lib/types'
 import { timeAgo, truncate } from '@/lib/utils'
@@ -7,22 +7,30 @@ import { Card } from '@/components/ui/Card'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
+import { SearchInput } from '@/components/ui/SearchInput'
 
 export default function QueriesIndex() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
+  const tagFilter = searchParams.get('tag') || ''
+
   useEffect(() => {
     loadEntries()
-  }, [page])
+  }, [page, tagFilter])
 
   async function loadEntries() {
     setLoading(true)
     try {
-      const response = await getEntries({ type: 'query', page })
+      const response = await getEntries({
+        type: 'query',
+        tag: tagFilter || undefined,
+        page
+      })
       setEntries(response.data)
       setTotalPages(response.meta.total_pages)
     } catch (error) {
@@ -32,11 +40,33 @@ export default function QueriesIndex() {
     }
   }
 
+  function handleSearch(value: string) {
+    setPage(1)
+    if (value) {
+      setSearchParams({ tag: value })
+    } else {
+      setSearchParams({})
+    }
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage)
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-white">Queries</h1>
         <p className="text-dark-muted text-sm mt-1">SQL queries executed by your application</p>
+      </div>
+
+      <div className="mb-4">
+        <SearchInput
+          placeholder="Search by tag (slow, select, insert...)"
+          value={tagFilter}
+          onChange={handleSearch}
+          className="max-w-sm"
+        />
       </div>
 
       <Card>
@@ -59,7 +89,7 @@ export default function QueriesIndex() {
             ) : entries.length === 0 ? (
               <TableRow>
                 <TableCell className="text-center text-dark-muted py-8" colSpan={4}>
-                  No queries recorded yet.
+                  {tagFilter ? `No queries found with tag "${tagFilter}".` : 'No queries recorded yet.'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -92,7 +122,7 @@ export default function QueriesIndex() {
             )}
           </TableBody>
         </Table>
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </Card>
     </div>
   )

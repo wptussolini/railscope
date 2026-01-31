@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import RequestsIndex from './screens/requests/Index'
 import RequestsShow from './screens/requests/Show'
 import CommandsIndex from './screens/commands/Index'
+import CommandsShow from './screens/commands/Show'
 import ScheduleIndex from './screens/schedule/Index'
 import JobsIndex from './screens/jobs/Index'
 import JobsShow from './screens/jobs/Show'
@@ -30,6 +31,7 @@ function App() {
         <Route path="/requests" element={<RequestsIndex />} />
         <Route path="/requests/:id" element={<RequestsShow />} />
         <Route path="/commands" element={<CommandsIndex />} />
+        <Route path="/commands/:id" element={<CommandsShow />} />
         <Route path="/schedule" element={<ScheduleIndex />} />
         <Route path="/jobs" element={<JobsIndex />} />
         <Route path="/jobs/:id" element={<JobsShow />} />

@@ -53,31 +53,51 @@ export default function ExceptionsShow() {
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Request Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <dt className="text-xs text-dark-muted uppercase">Method</dt>
-                <dd className="mt-1"><MethodBadge method={payload.method as string} /></dd>
-              </div>
-              <div>
-                <dt className="text-xs text-dark-muted uppercase">Path</dt>
-                <dd className="mt-1 font-mono text-sm">{payload.path as string}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-dark-muted uppercase">Controller</dt>
-                <dd className="mt-1 font-mono text-sm">{payload.controller as string}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-dark-muted uppercase">Action</dt>
-                <dd className="mt-1 font-mono text-sm">{payload.action as string}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+        {payload.source === 'command' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Command Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-2 gap-4">
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Source</dt>
+                  <dd className="mt-1"><Badge variant="info">Command</Badge></dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Command</dt>
+                  <dd className="mt-1 font-mono text-sm text-blue-400">{payload.command as string}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Request Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Method</dt>
+                  <dd className="mt-1"><MethodBadge method={payload.method as string} /></dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Path</dt>
+                  <dd className="mt-1 font-mono text-sm">{payload.path as string}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Controller</dt>
+                  <dd className="mt-1 font-mono text-sm">{payload.controller as string}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Action</dt>
+                  <dd className="mt-1 font-mono text-sm">{payload.action as string}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
