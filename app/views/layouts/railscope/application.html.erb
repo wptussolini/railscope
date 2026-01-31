@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="dark">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Railscope</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
-    <%= stylesheet_link_tag "railscope/application", media: "all" %>
+    <link rel="stylesheet" href="<%= railscope.root_path %>assets/app.css">
   </head>
-  <body>
+  <body class="bg-[#0d1117] text-[#c9d1d9]">
     <%= yield %>
+    <script type="module" src="<%= railscope.root_path %>assets/app.js"></script>
   </body>
 </html>

@@ -10,10 +10,14 @@ module Railscope
   class Engine < ::Rails::Engine
     isolate_namespace Railscope
 
-    initializer "railscope.assets" do |app|
-      if app.config.respond_to?(:assets)
-        app.config.assets.precompile += %w[railscope/application.css railscope/application.js]
-      end
+    initializer "railscope.static_assets" do |app|
+      # Serve static assets from public/railscope
+      app.middleware.insert_before(
+        ActionDispatch::Static,
+        Rack::Static,
+        urls: ["/railscope/assets"],
+        root: Railscope::Engine.root.join("public").to_s
+      )
     end
 
     initializer "railscope.middleware" do |app|
