@@ -40,14 +40,39 @@ module Railscope
       private
 
       def build_payload(event)
+        file, line = extract_caller_location
+
         {
           sql: event.payload[:sql],
           name: event.payload[:name],
           duration: event.duration.round(2),
           cached: event.payload[:cached] || false,
           async: event.payload[:async] || false,
-          row_count: event.payload[:row_count]
-        }
+          row_count: event.payload[:row_count],
+          connection: event.payload[:connection]&.adapter_name,
+          file: file,
+          line: line
+        }.compact
+      end
+
+      # Extract the location where the query was called from (application code)
+      def extract_caller_location
+        # Filter out Rails internals, gems, and Railscope itself
+        app_line = caller.find do |line|
+          line.include?(Rails.root.to_s) &&
+            !line.include?("/vendor/") &&
+            !line.include?("/railscope/")
+        end
+
+        return [nil, nil] unless app_line
+
+        if app_line =~ /\A(.+):(\d+)/
+          [Regexp.last_match(1), Regexp.last_match(2).to_i]
+        else
+          [nil, nil]
+        end
+      rescue StandardError
+        [nil, nil]
       end
 
       def build_tags(event)

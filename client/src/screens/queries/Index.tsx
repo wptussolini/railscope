@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { getEntries } from '@/api/entries'
+import { getEntries, getFamilyEntries } from '@/api/entries'
 import { Entry } from '@/lib/types'
 import { timeAgo, truncate } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
@@ -18,21 +18,28 @@ export default function QueriesIndex() {
   const [totalPages, setTotalPages] = useState(1)
 
   const tagFilter = searchParams.get('tag') || ''
+  const familyHashFilter = searchParams.get('family_hash') || ''
 
   useEffect(() => {
     loadEntries()
-  }, [page, tagFilter])
+  }, [page, tagFilter, familyHashFilter])
 
   async function loadEntries() {
     setLoading(true)
     try {
-      const response = await getEntries({
-        type: 'query',
-        tag: tagFilter || undefined,
-        page
-      })
-      setEntries(response.data)
-      setTotalPages(response.meta.total_pages)
+      if (familyHashFilter) {
+        const response = await getFamilyEntries(familyHashFilter, page)
+        setEntries(response.data)
+        setTotalPages(response.meta.total_pages)
+      } else {
+        const response = await getEntries({
+          type: 'query',
+          tag: tagFilter || undefined,
+          page
+        })
+        setEntries(response.data)
+        setTotalPages(response.meta.total_pages)
+      }
     } catch (error) {
       console.error('Failed to load entries:', error)
     } finally {
@@ -53,21 +60,40 @@ export default function QueriesIndex() {
     setPage(newPage)
   }
 
+  function clearFamilyFilter() {
+    setSearchParams({})
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-white">Queries</h1>
-        <p className="text-dark-muted text-sm mt-1">SQL queries executed by your application</p>
+        <p className="text-dark-muted text-sm mt-1">
+          {familyHashFilter
+            ? 'Viewing similar queries'
+            : 'SQL queries executed by your application'}
+        </p>
       </div>
 
-      <div className="mb-4">
-        <SearchInput
-          placeholder="Search by tag (slow, select, insert...)"
-          value={tagFilter}
-          onChange={handleSearch}
-          className="max-w-sm"
-        />
-      </div>
+      {familyHashFilter ? (
+        <div className="mb-4">
+          <button
+            onClick={clearFamilyFilter}
+            className="text-blue-400 hover:text-blue-300 text-sm"
+          >
+            ← Back to all queries
+          </button>
+        </div>
+      ) : (
+        <div className="mb-4">
+          <SearchInput
+            placeholder="Search by tag (slow, select, insert...)"
+            value={tagFilter}
+            onChange={handleSearch}
+            className="max-w-sm"
+          />
+        </div>
+      )}
 
       <Card>
         <Table>
@@ -89,7 +115,11 @@ export default function QueriesIndex() {
             ) : entries.length === 0 ? (
               <TableRow>
                 <TableCell className="text-center text-dark-muted py-8" colSpan={4}>
-                  {tagFilter ? `No queries found with tag "${tagFilter}".` : 'No queries recorded yet.'}
+                  {familyHashFilter
+                    ? 'No similar queries found.'
+                    : tagFilter
+                      ? `No queries found with tag "${tagFilter}".`
+                      : 'No queries recorded yet.'}
                 </TableCell>
               </TableRow>
             ) : (
