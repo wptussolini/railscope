@@ -9,6 +9,10 @@ module Railscope
         Railscope::Context.current
       end
 
+      def recording?
+        context[:recording] != false
+      end
+
       def context_payload
         {
           request_id: context.request_id,
@@ -21,6 +25,8 @@ module Railscope
       end
 
       def create_entry!(entry_type:, payload:, tags:)
+        return unless recording?
+
         filtered_payload = Railscope.filter(payload.merge(context_payload))
 
         Entry.create!(

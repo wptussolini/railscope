@@ -14,7 +14,6 @@ module Railscope
 
       def record(event)
         return unless Railscope.enabled?
-        return if ignore_path?(event.payload[:path])
 
         create_entry!(
           entry_type: "request",
@@ -46,12 +45,6 @@ module Railscope
         tags << "error" if event.payload[:status].to_i >= 400
         tags << "slow" if event.duration > 1000
         tags
-      end
-
-      def ignore_path?(path)
-        return false if path.nil?
-
-        path.start_with?("/railscope")
       end
     end
   end

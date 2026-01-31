@@ -18,10 +18,12 @@ module Railscope
     private
 
     def setup_context(env)
+      path = env["PATH_INFO"]
       context = Context.current
       context.request_id = env["action_dispatch.request_id"] || SecureRandom.uuid
-      context[:path] = env["PATH_INFO"]
+      context[:path] = path
       context[:method] = env["REQUEST_METHOD"]
+      context[:recording] = Railscope.should_record?(path: path)
     end
   end
 end
