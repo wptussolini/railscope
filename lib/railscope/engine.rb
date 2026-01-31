@@ -2,6 +2,7 @@
 
 require_relative "subscribers/request_subscriber"
 require_relative "subscribers/query_subscriber"
+require_relative "subscribers/exception_subscriber"
 
 module Railscope
   class Engine < ::Rails::Engine
@@ -24,6 +25,7 @@ module Railscope
     initializer "railscope.subscribers", after: :load_config_initializers do
       ActiveSupport.on_load(:action_controller) do
         Railscope::Subscribers::RequestSubscriber.subscribe
+        Railscope::Subscribers::ExceptionSubscriber.subscribe
       end
 
       ActiveSupport.on_load(:active_record) do
