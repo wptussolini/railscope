@@ -3,6 +3,7 @@
 require_relative "subscribers/request_subscriber"
 require_relative "subscribers/query_subscriber"
 require_relative "subscribers/exception_subscriber"
+require_relative "subscribers/job_subscriber"
 
 module Railscope
   class Engine < ::Rails::Engine
@@ -30,6 +31,10 @@ module Railscope
 
       ActiveSupport.on_load(:active_record) do
         Railscope::Subscribers::QuerySubscriber.subscribe
+      end
+
+      ActiveSupport.on_load(:active_job) do
+        Railscope::Subscribers::JobSubscriber.subscribe
       end
     end
   end
