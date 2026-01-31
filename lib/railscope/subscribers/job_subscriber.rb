@@ -2,7 +2,7 @@
 
 module Railscope
   module Subscribers
-    class JobSubscriber
+    class JobSubscriber < BaseSubscriber
       ENQUEUE_EVENT = "enqueue.active_job"
       PERFORM_EVENT = "perform.active_job"
 
@@ -22,11 +22,10 @@ module Railscope
         return unless Railscope.enabled?
         return if ignore_job?(event.payload[:job])
 
-        Entry.create!(
+        create_entry!(
           entry_type: "job_enqueue",
           payload: build_enqueue_payload(event),
-          tags: build_tags(event, "enqueue"),
-          occurred_at: Time.current
+          tags: build_tags(event, "enqueue")
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record job enqueue: #{e.message}")
@@ -36,11 +35,10 @@ module Railscope
         return unless Railscope.enabled?
         return if ignore_job?(event.payload[:job])
 
-        Entry.create!(
+        create_entry!(
           entry_type: "job_perform",
           payload: build_perform_payload(event),
-          tags: build_tags(event, "perform"),
-          occurred_at: Time.current
+          tags: build_tags(event, "perform")
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record job perform: #{e.message}")

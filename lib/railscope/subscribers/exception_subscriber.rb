@@ -2,7 +2,7 @@
 
 module Railscope
   module Subscribers
-    class ExceptionSubscriber
+    class ExceptionSubscriber < BaseSubscriber
       EVENT_NAME = "process_action.action_controller"
 
       def self.subscribe
@@ -16,11 +16,10 @@ module Railscope
         return unless Railscope.enabled?
         return unless event.payload[:exception].present?
 
-        Entry.create!(
+        create_entry!(
           entry_type: "exception",
           payload: build_payload(event),
-          tags: build_tags(event),
-          occurred_at: Time.current
+          tags: build_tags(event)
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record exception: #{e.message}")

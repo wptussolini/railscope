@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "railscope/version"
+require_relative "railscope/context"
+require_relative "railscope/middleware"
 require_relative "railscope/engine"
 
 module Railscope
@@ -15,6 +17,10 @@ module Railscope
 
     def retention_days
       @retention_days ||= ENV.fetch("RAILSCOPE_RETENTION_DAYS", 7).to_i
+    end
+
+    def context
+      Context.current
     end
   end
 end

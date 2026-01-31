@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "subscribers/base_subscriber"
 require_relative "subscribers/request_subscriber"
 require_relative "subscribers/query_subscriber"
 require_relative "subscribers/exception_subscriber"
@@ -13,6 +14,10 @@ module Railscope
       if app.config.respond_to?(:assets)
         app.config.assets.precompile += %w[railscope/application.css railscope/application.js]
       end
+    end
+
+    initializer "railscope.middleware" do |app|
+      app.middleware.insert_before(0, Railscope::Middleware)
     end
 
     initializer "railscope.migrations" do |app|

@@ -2,7 +2,7 @@
 
 module Railscope
   module Subscribers
-    class RequestSubscriber
+    class RequestSubscriber < BaseSubscriber
       EVENT_NAME = "process_action.action_controller"
 
       def self.subscribe
@@ -16,11 +16,10 @@ module Railscope
         return unless Railscope.enabled?
         return if ignore_path?(event.payload[:path])
 
-        Entry.create!(
+        create_entry!(
           entry_type: "request",
           payload: build_payload(event),
-          tags: build_tags(event),
-          occurred_at: Time.current
+          tags: build_tags(event)
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record request: #{e.message}")

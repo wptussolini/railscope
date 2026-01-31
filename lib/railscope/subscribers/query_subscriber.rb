@@ -2,7 +2,7 @@
 
 module Railscope
   module Subscribers
-    class QuerySubscriber
+    class QuerySubscriber < BaseSubscriber
       EVENT_NAME = "sql.active_record"
 
       IGNORED_NAMES = %w[SCHEMA TRANSACTION].freeze
@@ -25,11 +25,10 @@ module Railscope
         return unless Railscope.enabled?
         return if ignore_query?(event)
 
-        Entry.create!(
+        create_entry!(
           entry_type: "query",
           payload: build_payload(event),
-          tags: build_tags(event),
-          occurred_at: Time.current
+          tags: build_tags(event)
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record query: #{e.message}")
