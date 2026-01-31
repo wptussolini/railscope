@@ -33,10 +33,15 @@ module Railscope
       def build_payload(event)
         exception_class, exception_message = event.payload[:exception]
         exception_object = event.payload[:exception_object]
+        file, line = extract_file_and_line(exception_object)
+        line_preview = extract_line_preview(file, line)
 
         {
           class: exception_class,
           message: exception_message,
+          file: file,
+          line: line,
+          line_preview: line_preview,
           backtrace: exception_object&.backtrace&.first(20),
           path: event.payload[:path],
           method: event.payload[:method],
@@ -45,6 +50,34 @@ module Railscope
           params: filtered_params(event.payload[:params]),
           status: event.payload[:status]
         }
+      end
+
+      def extract_file_and_line(exception)
+        return [nil, nil] unless exception&.backtrace&.any?
+
+        first_line = exception.backtrace.first
+        if first_line =~ /\A(.+):(\d+)/
+          [Regexp.last_match(1), Regexp.last_match(2).to_i]
+        else
+          [nil, nil]
+        end
+      end
+
+      # Extract code context around the exception line (like Telescope)
+      def extract_line_preview(file, line)
+        return nil unless file && line && File.exist?(file)
+
+        lines = File.readlines(file)
+        start_line = [line - 10, 1].max
+        end_line = [line + 9, lines.length].min
+
+        result = {}
+        (start_line..end_line).each do |line_num|
+          result[line_num] = lines[line_num - 1]&.chomp || ""
+        end
+        result
+      rescue StandardError
+        nil
       end
 
       def build_tags(event)

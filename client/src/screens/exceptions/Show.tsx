@@ -5,7 +5,7 @@ import { Entry } from '@/lib/types'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge, MethodBadge } from '@/components/ui/Badge'
 
-type TabType = 'message' | 'context' | 'stacktrace'
+type TabType = 'message' | 'location' | 'context' | 'stacktrace'
 
 export default function ExceptionsShow() {
   const { id } = useParams()
@@ -47,11 +47,9 @@ export default function ExceptionsShow() {
   const context = payload.context as Record<string, unknown> | undefined
   const isFromCommand = payload.source === 'command'
 
-  // Extract file and line from first backtrace entry
-  const firstTrace = backtrace[0] || ''
-  const locationMatch = firstTrace.match(/^(.+):(\d+)/)
-  const file = locationMatch ? locationMatch[1] : ''
-  const line = locationMatch ? locationMatch[2] : ''
+  // Use file and line from payload (extracted by backend)
+  const file = payload.file ? String(payload.file) : ''
+  const line = payload.line ? String(payload.line) : ''
 
   const formattedTime = new Date(entry.occurred_at).toLocaleString('en-US', {
     year: 'numeric',
@@ -137,7 +135,7 @@ export default function ExceptionsShow() {
         </CardContent>
       </Card>
 
-      {/* Message / Context / Stacktrace Card */}
+      {/* Message / Location / Context / Stacktrace Card */}
       <Card>
         <div className="flex border-b border-dark-border">
           <button
@@ -150,6 +148,18 @@ export default function ExceptionsShow() {
           >
             Message
           </button>
+          {file && (
+            <button
+              onClick={() => setCurrentTab('location')}
+              className={`px-4 py-2.5 text-sm font-medium ${
+                currentTab === 'location'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-dark-muted hover:text-dark-text'
+              }`}
+            >
+              Location
+            </button>
+          )}
           {context && Object.keys(context).length > 0 && (
             <button
               onClick={() => setCurrentTab('context')}
@@ -179,6 +189,16 @@ export default function ExceptionsShow() {
             <pre className="text-red-400 whitespace-pre-wrap break-words font-mono text-sm">
               {String(payload.message)}
             </pre>
+          </div>
+        )}
+
+        {currentTab === 'location' && file && (
+          <div className="bg-[#1a1a2e]">
+            <CodePreview
+              file={file}
+              line={Number(line)}
+              linePreview={payload.line_preview as Record<string, string> | undefined}
+            />
           </div>
         )}
 
@@ -385,4 +405,61 @@ function getTypeLabel(type: string): string {
     client_request: 'HTTP Client'
   }
   return labels[type] || type
+}
+
+interface CodePreviewProps {
+  file: string
+  line: number
+  linePreview?: Record<string, string>
+}
+
+function CodePreview({ file, line, linePreview }: CodePreviewProps) {
+  if (!linePreview || Object.keys(linePreview).length === 0) {
+    // Fallback when no line preview available
+    return (
+      <div className="p-4 font-mono text-sm">
+        <div className="text-dark-muted mb-2">File:</div>
+        <div className="text-blue-400 mb-4 break-all">{file}</div>
+        <div className="text-dark-muted mb-2">Line:</div>
+        <div className="inline-block px-3 py-1 bg-red-500/20 text-red-400 rounded">
+          {line}
+        </div>
+      </div>
+    )
+  }
+
+  const lineNumbers = Object.keys(linePreview).map(Number).sort((a, b) => a - b)
+
+  return (
+    <div className="overflow-x-auto">
+      <pre className="text-sm">
+        {lineNumbers.map((lineNum) => {
+          const isHighlighted = lineNum === line
+          const code = linePreview[lineNum] || ''
+
+          return (
+            <div
+              key={lineNum}
+              className={`flex ${isHighlighted ? 'bg-red-500/30' : ''}`}
+            >
+              <span
+                className={`px-3 py-0.5 text-right select-none min-w-[3rem] ${
+                  isHighlighted ? 'text-red-400 font-bold' : 'text-dark-muted'
+                }`}
+              >
+                {lineNum}
+              </span>
+              <code
+                className={`px-3 py-0.5 flex-1 whitespace-pre ${
+                  isHighlighted ? 'text-white' : 'text-dark-text'
+                }`}
+              >
+                {code}
+              </code>
+            </div>
+          )
+        })}
+      </pre>
+    </div>
+  )
 }

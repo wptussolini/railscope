@@ -124,9 +124,10 @@ export default function ExceptionsIndex() {
             ) : (
               entries.map((entry) => {
                 const payload = entry.payload as Record<string, unknown>
-                const location = payload.source === 'command'
-                  ? `command: ${String(payload.command)}`
-                  : `${String(payload.controller)}#${String(payload.action)}`
+                // Show file:line as location (like Telescope)
+                const fileLocation = payload.file && payload.line
+                  ? `${String(payload.file)}:${payload.line}`
+                  : null
                 return (
                   <TableRow key={entry.id} onClick={() => navigate(`/exceptions/${entry.id}`)}>
                     <TableCell>
@@ -136,7 +137,7 @@ export default function ExceptionsIndex() {
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-dark-muted">
-                      {location}
+                      {fileLocation ? truncate(fileLocation, 50) : '-'}
                     </TableCell>
                     <TableCell className="text-dark-muted" title={entry.occurred_at}>
                       {timeAgo(entry.occurred_at)}

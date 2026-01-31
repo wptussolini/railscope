@@ -129,11 +129,17 @@ module Railscope
       end
 
       def create_exception_entry!(task, exception)
+        file, line = extract_file_and_line(exception)
+        line_preview = extract_line_preview(file, line)
+
         create_entry!(
           entry_type: "exception",
           payload: {
             class: exception.class.name,
             message: exception.message,
+            file: file,
+            line: line,
+            line_preview: line_preview,
             backtrace: exception.backtrace&.first(20),
             source: "command",
             command: task.name
@@ -142,6 +148,34 @@ module Railscope
           family_hash: generate_family_hash("exception", exception.class.name, "command", task.name),
           should_display_on_index: true
         )
+      end
+
+      def extract_file_and_line(exception)
+        return [nil, nil] unless exception&.backtrace&.any?
+
+        first_line = exception.backtrace.first
+        if first_line =~ /\A(.+):(\d+)/
+          [Regexp.last_match(1), Regexp.last_match(2).to_i]
+        else
+          [nil, nil]
+        end
+      end
+
+      # Extract code context around the exception line (like Telescope)
+      def extract_line_preview(file, line)
+        return nil unless file && line && File.exist?(file)
+
+        lines = File.readlines(file)
+        start_line = [line - 10, 1].max
+        end_line = [line + 9, lines.length].min
+
+        result = {}
+        (start_line..end_line).each do |line_num|
+          result[line_num] = lines[line_num - 1]&.chomp || ""
+        end
+        result
+      rescue StandardError
+        nil
       end
 
       def build_exception_tags(exception)
