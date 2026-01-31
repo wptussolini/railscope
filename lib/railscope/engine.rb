@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "subscribers/request_subscriber"
+
 module Railscope
   class Engine < ::Rails::Engine
     isolate_namespace Railscope
@@ -15,6 +17,12 @@ module Railscope
         config.paths["db/migrate"].expanded.each do |expanded_path|
           app.config.paths["db/migrate"] << expanded_path
         end
+      end
+    end
+
+    initializer "railscope.subscribers", after: :load_config_initializers do
+      ActiveSupport.on_load(:action_controller) do
+        Railscope::Subscribers::RequestSubscriber.subscribe
       end
     end
   end
