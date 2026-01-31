@@ -3,7 +3,12 @@
 Railscope::Engine.routes.draw do
   # API endpoints
   namespace :api do
-    resources :entries, only: [:index, :show, :destroy]
+    resources :entries, only: [:index, :show, :destroy] do
+      collection do
+        get "batch/:batch_id", action: :batch, as: :batch
+        get "family/:family_hash", action: :family, as: :family
+      end
+    end
   end
 
   # Serve React SPA for all other routes

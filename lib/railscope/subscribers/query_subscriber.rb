@@ -23,12 +23,15 @@ module Railscope
 
       def record(event)
         return unless Railscope.enabled?
+        return unless Railscope.ready?
         return if ignore_query?(event)
 
         create_entry!(
           entry_type: "query",
           payload: build_payload(event),
-          tags: build_tags(event)
+          tags: build_tags(event),
+          family_hash: build_family_hash(event),
+          should_display_on_index: true
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record query: #{e.message}")
@@ -53,6 +56,23 @@ module Railscope
         tags << "cached" if event.payload[:cached]
         tags << "slow" if event.duration > 100
         tags.compact
+      end
+
+      # Generate family hash based on normalized SQL (without literal values)
+      def build_family_hash(event)
+        normalized_sql = normalize_sql(event.payload[:sql])
+        generate_family_hash("query", normalized_sql)
+      end
+
+      # Normalize SQL by replacing literal values with placeholders
+      def normalize_sql(sql)
+        sql.to_s
+           .gsub(/\d+/, "?")                          # Replace numbers
+           .gsub(/'[^']*'/, "?")                      # Replace single-quoted strings
+           .gsub(/"[^"]*"/, "?")                      # Replace double-quoted strings
+           .gsub(/\$\d+/, "?")                        # Replace PostgreSQL positional params
+           .gsub(/\s+/, " ")                          # Normalize whitespace
+           .strip
       end
 
       def query_type(sql)

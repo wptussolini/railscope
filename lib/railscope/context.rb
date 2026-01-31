@@ -48,6 +48,16 @@ module Railscope
       @store.dup
     end
 
+    # Batch ID groups all entries from a single request/job
+    def batch_id
+      self[:batch_id] ||= SecureRandom.uuid
+    end
+
+    def batch_id=(value)
+      self[:batch_id] = value
+    end
+
+    # Request ID from Rails (for correlation with Rails logs)
     def request_id
       self[:request_id]
     end

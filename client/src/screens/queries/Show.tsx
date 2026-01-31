@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getEntry } from '@/api/entries'
 import { Entry } from '@/lib/types'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -69,15 +69,46 @@ export default function QueriesShow() {
                 <dt className="text-xs text-dark-muted uppercase">Row Count</dt>
                 <dd className="mt-1">{payload.row_count != null ? String(payload.row_count) : '-'}</dd>
               </div>
-              <div>
-                <dt className="text-xs text-dark-muted uppercase">Request ID</dt>
-                <dd className="mt-1 font-mono text-xs text-dark-muted truncate">
-                  {String(payload.request_id)}
-                </dd>
-              </div>
+              {entry.family_count && entry.family_count > 1 && (
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Similar Queries</dt>
+                  <dd className="mt-1">
+                    <Link
+                      to={`/queries?family=${entry.family_hash}`}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      {entry.family_count} occurrences
+                    </Link>
+                  </dd>
+                </div>
+              )}
             </dl>
           </CardContent>
         </Card>
+
+        {entry.batch_id && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Context</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-2 gap-4">
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Request ID</dt>
+                  <dd className="mt-1 font-mono text-xs text-dark-muted truncate">
+                    {String(payload.request_id || '-')}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-dark-muted uppercase">Batch ID</dt>
+                  <dd className="mt-1 font-mono text-xs text-dark-muted truncate">
+                    {entry.batch_id}
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

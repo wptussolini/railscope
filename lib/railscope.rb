@@ -61,9 +61,28 @@ module Railscope
 
     def should_record?(path: nil)
       return false unless enabled?
+      return false unless ready?
       return false if path && ignore_path?(path)
 
       true
+    end
+
+    def ready?
+      return @ready if defined?(@ready) && !@ready.nil?
+      return false if @checking_ready
+      return false if defined?(Rails::Generators)
+
+      @checking_ready = true
+      @ready = Entry.table_exists?
+      @checking_ready = false
+      @ready
+    rescue StandardError
+      @checking_ready = false
+      false
+    end
+
+    def reset_ready!
+      @ready = nil
     end
 
     def ignore_path?(path)

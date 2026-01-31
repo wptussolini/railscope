@@ -20,12 +20,17 @@ module Railscope
 
       def record_enqueue(event)
         return unless Railscope.enabled?
+        return unless Railscope.ready?
         return if ignore_job?(event.payload[:job])
+
+        job = event.payload[:job]
 
         create_entry!(
           entry_type: "job_enqueue",
           payload: build_enqueue_payload(event),
-          tags: build_tags(event, "enqueue")
+          tags: build_tags(event, "enqueue"),
+          family_hash: build_family_hash(job),
+          should_display_on_index: true
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record job enqueue: #{e.message}")
@@ -33,12 +38,17 @@ module Railscope
 
       def record_perform(event)
         return unless Railscope.enabled?
+        return unless Railscope.ready?
         return if ignore_job?(event.payload[:job])
+
+        job = event.payload[:job]
 
         create_entry!(
           entry_type: "job_perform",
           payload: build_perform_payload(event),
-          tags: build_tags(event, "perform")
+          tags: build_tags(event, "perform"),
+          family_hash: build_family_hash(job),
+          should_display_on_index: true
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record job perform: #{e.message}")
@@ -79,6 +89,11 @@ module Railscope
         tags << "failed" if event.payload[:exception_object].present?
         tags << job.class.name.underscore.gsub("/", "_")
         tags.compact
+      end
+
+      # Group jobs by class name
+      def build_family_hash(job)
+        generate_family_hash("job", job.class.name)
       end
 
       def safe_arguments(arguments)

@@ -14,12 +14,15 @@ module Railscope
 
       def record(event)
         return unless Railscope.enabled?
+        return unless Railscope.ready?
         return unless event.payload[:exception].present?
 
         create_entry!(
           entry_type: "exception",
           payload: build_payload(event),
-          tags: build_tags(event)
+          tags: build_tags(event),
+          family_hash: build_family_hash(event),
+          should_display_on_index: true
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record exception: #{e.message}")
@@ -49,6 +52,14 @@ module Railscope
         tags = ["exception"]
         tags << exception_class.underscore.gsub("/", "_") if exception_class
         tags
+      end
+
+      # Group exceptions by class and location (controller#action)
+      def build_family_hash(event)
+        exception_class = event.payload[:exception]&.first
+        controller = event.payload[:controller]
+        action = event.payload[:action]
+        generate_family_hash("exception", exception_class, controller, action)
       end
 
       def filtered_params(params)

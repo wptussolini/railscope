@@ -10,7 +10,7 @@ export default function RequestsShow() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [entry, setEntry] = useState<Entry | null>(null)
-  const [related, setRelated] = useState<Entry[]>([])
+  const [batch, setBatch] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function RequestsShow() {
     try {
       const response = await getEntry(id)
       setEntry(response.data)
-      setRelated(response.related)
+      setBatch(response.batch || [])
     } catch (error) {
       console.error('Failed to load entry:', error)
     } finally {
@@ -132,14 +132,14 @@ export default function RequestsShow() {
         </div>
 
         <div>
-          {related.length > 0 && (
+          {batch.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Timeline</CardTitle>
+                <CardTitle>Request Timeline ({batch.length})</CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 <div className="space-y-1">
-                  {related.map((r) => (
+                  {batch.map((r) => (
                     <Link
                       key={r.id}
                       to={`/${r.entry_type === 'query' ? 'queries' : r.entry_type + 's'}/${r.id}`}

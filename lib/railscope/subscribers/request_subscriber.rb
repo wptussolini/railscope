@@ -14,11 +14,14 @@ module Railscope
 
       def record(event)
         return unless Railscope.enabled?
+        return unless Railscope.ready?
 
         create_entry!(
           entry_type: "request",
           payload: build_payload(event),
-          tags: build_tags(event)
+          tags: build_tags(event),
+          family_hash: build_family_hash(event),
+          should_display_on_index: true
         )
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record request: #{e.message}")
@@ -45,6 +48,13 @@ module Railscope
         tags << "error" if event.payload[:status].to_i >= 400
         tags << "slow" if event.duration > 1000
         tags
+      end
+
+      # Group requests by controller#action
+      def build_family_hash(event)
+        controller = event.payload[:controller]
+        action = event.payload[:action]
+        generate_family_hash("request", controller, action)
       end
     end
   end
