@@ -69,8 +69,6 @@ export default function CommandsShow() {
   // Show all options including false/null values (like Telescope does)
   const options = (payload.options || {}) as Record<string, unknown>
 
-  const exception = payload.exception as Record<string, unknown> | undefined
-
   const formattedTime = new Date(entry.occurred_at).toLocaleString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -171,31 +169,7 @@ export default function CommandsShow() {
         </div>
       </Card>
 
-      {/* Exception Card (inline for rake tasks) */}
-      {exception ? (
-        <Card>
-          <div className="flex border-b border-dark-border">
-            <span className="px-4 py-2.5 text-sm font-medium bg-red-500 text-white">
-              Exception
-            </span>
-          </div>
-          <CardContent>
-            <div className="text-red-400 font-medium">{String(exception.class)}</div>
-            <div className="text-dark-muted mt-1 break-words">{String(exception.message)}</div>
-            {Array.isArray(exception.backtrace) && exception.backtrace.length > 0 ? (
-              <div className="mt-4 bg-black/20 rounded overflow-auto max-h-64">
-                {(exception.backtrace as string[]).map((line, i) => (
-                  <div key={i} className="px-3 py-0.5 font-mono text-xs text-dark-muted">
-                    {line}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* Related Entries (batch) */}
+      {/* Related Entries (batch) - exceptions will appear here */}
       {batch.length > 0 && <RelatedEntries entries={batch} navigate={navigate} />}
     </div>
   )
