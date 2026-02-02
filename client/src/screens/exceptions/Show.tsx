@@ -45,7 +45,7 @@ export default function ExceptionsShow() {
   const payload = entry.payload as Record<string, unknown>
   const backtrace = (payload.backtrace as string[] | undefined) || []
   const context = payload.context as Record<string, unknown> | undefined
-  const isFromCommand = payload.source === 'command'
+  const source = payload.source as string | undefined // 'command', 'job', or undefined (request)
 
   // Use file and line from payload (extracted by backend)
   const file = payload.file ? String(payload.file) : ''
@@ -91,16 +91,31 @@ export default function ExceptionsShow() {
                   <td className="px-4 py-3 font-mono text-sm">{file}:{line}</td>
                 </tr>
               )}
-              {isFromCommand ? (
+              {source === 'command' ? (
                 <tr className="border-t border-dark-border">
                   <td className="px-4 py-3 text-dark-muted whitespace-nowrap">Command</td>
                   <td className="px-4 py-3">
                     <code className="text-blue-400">{String(payload.command)}</code>
                   </td>
                 </tr>
+              ) : source === 'job' ? (
+                <>
+                  <tr className="border-t border-dark-border">
+                    <td className="px-4 py-3 text-dark-muted whitespace-nowrap">Job</td>
+                    <td className="px-4 py-3">
+                      <code className="text-blue-400">{String(payload.job_class)}</code>
+                    </td>
+                  </tr>
+                  {payload.queue_name ? (
+                    <tr className="border-t border-dark-border">
+                      <td className="px-4 py-3 text-dark-muted whitespace-nowrap">Queue</td>
+                      <td className="px-4 py-3">{String(payload.queue_name)}</td>
+                    </tr>
+                  ) : null}
+                </>
               ) : (
                 <>
-                  {payload.method && (
+                  {payload.method ? (
                     <tr className="border-t border-dark-border">
                       <td className="px-4 py-3 text-dark-muted whitespace-nowrap">Request</td>
                       <td className="px-4 py-3 flex items-center gap-2">
@@ -108,15 +123,15 @@ export default function ExceptionsShow() {
                         <span className="font-mono text-sm">{String(payload.path)}</span>
                       </td>
                     </tr>
-                  )}
-                  {payload.controller && (
+                  ) : null}
+                  {payload.controller ? (
                     <tr className="border-t border-dark-border">
                       <td className="px-4 py-3 text-dark-muted whitespace-nowrap">Controller</td>
                       <td className="px-4 py-3 font-mono text-sm">
                         {String(payload.controller)}#{String(payload.action)}
                       </td>
                     </tr>
-                  )}
+                  ) : null}
                 </>
               )}
               <tr className="border-t border-dark-border">

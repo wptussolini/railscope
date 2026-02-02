@@ -34,17 +34,33 @@ module Railscope
     end
 
     initializer "railscope.subscribers", after: :load_config_initializers do
-      ActiveSupport.on_load(:action_controller) do
+      # ActionController subscribers
+      if defined?(ActionController::Base)
         Railscope::Subscribers::RequestSubscriber.subscribe
         Railscope::Subscribers::ExceptionSubscriber.subscribe
+      else
+        ActiveSupport.on_load(:action_controller) do
+          Railscope::Subscribers::RequestSubscriber.subscribe
+          Railscope::Subscribers::ExceptionSubscriber.subscribe
+        end
       end
 
-      ActiveSupport.on_load(:active_record) do
+      # ActiveRecord subscribers
+      if defined?(ActiveRecord::Base)
         Railscope::Subscribers::QuerySubscriber.subscribe
+      else
+        ActiveSupport.on_load(:active_record) do
+          Railscope::Subscribers::QuerySubscriber.subscribe
+        end
       end
 
-      ActiveSupport.on_load(:active_job) do
+      # ActiveJob subscribers
+      if defined?(ActiveJob::Base)
         Railscope::Subscribers::JobSubscriber.subscribe
+      else
+        ActiveSupport.on_load(:active_job) do
+          Railscope::Subscribers::JobSubscriber.subscribe
+        end
       end
     end
 

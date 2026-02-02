@@ -6,6 +6,10 @@ module Railscope
       EVENT_NAME = "process_action.action_controller"
 
       def self.subscribe
+        return if @subscribed
+
+        @subscribed = true
+
         ActiveSupport::Notifications.subscribe(EVENT_NAME) do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           new.record(event)

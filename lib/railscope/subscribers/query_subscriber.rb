@@ -15,6 +15,10 @@ module Railscope
       ].freeze
 
       def self.subscribe
+        return if @subscribed
+
+        @subscribed = true
+
         ActiveSupport::Notifications.subscribe(EVENT_NAME) do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           new.record(event)
@@ -25,6 +29,11 @@ module Railscope
         return unless Railscope.enabled?
         return unless Railscope.ready?
         return if ignore_query?(event)
+
+        # Debug: log the batch_id being used
+        if context[:job_class].present?
+          Rails.logger.debug("[Railscope] Query in job context - batch_id: #{context.batch_id}, job: #{context[:job_class]}")
+        end
 
         create_entry!(
           entry_type: "query",
