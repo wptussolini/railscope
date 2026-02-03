@@ -7,7 +7,7 @@ module Railscope
     def perform
       return unless Railscope.enabled?
 
-      deleted_count = Entry.expired.delete_all
+      deleted_count = Railscope.storage.destroy_expired!
       Rails.logger.info("[Railscope] Purged #{deleted_count} expired entries")
       deleted_count
     end

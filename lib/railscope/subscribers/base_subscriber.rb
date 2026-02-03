@@ -29,7 +29,7 @@ module Railscope
 
         filtered_payload = Railscope.filter(payload.merge(context_payload))
 
-        Entry.create!(
+        Railscope.storage.write(
           entry_type: entry_type,
           batch_id: context.batch_id,
           family_hash: family_hash,

@@ -3,6 +3,10 @@
 require_relative "railscope/version"
 require_relative "railscope/context"
 require_relative "railscope/filter"
+require_relative "railscope/entry_data"
+require_relative "railscope/storage/base"
+require_relative "railscope/storage/database"
+require_relative "railscope/storage/redis_storage"
 require_relative "railscope/middleware"
 require_relative "railscope/engine"
 
@@ -17,8 +21,12 @@ module Railscope
     /cable
   ].freeze
 
+  # Storage backends
+  STORAGE_DATABASE = :database
+  STORAGE_REDIS = :redis
+
   class << self
-    attr_writer :retention_days
+    attr_writer :retention_days, :redis, :storage_backend
     attr_accessor :authenticate_with
 
     def enabled?
@@ -27,6 +35,51 @@ module Railscope
 
     def retention_days
       @retention_days ||= ENV.fetch("RAILSCOPE_RETENTION_DAYS", 7).to_i
+    end
+
+    # Storage configuration
+    # @return [Symbol] :database or :redis
+    def storage_backend
+      return @storage_backend if defined?(@storage_backend) && @storage_backend
+
+      backend = ENV.fetch("RAILSCOPE_STORAGE", "database").to_sym
+      @storage_backend = %i[database redis].include?(backend) ? backend : STORAGE_DATABASE
+    end
+
+    # Get the storage adapter instance
+    # @return [Storage::Base] the configured storage adapter
+    def storage
+      @storage ||= case storage_backend
+                   when STORAGE_REDIS
+                     Storage::RedisStorage.new
+                   else
+                     Storage::Database.new
+                   end
+    end
+
+    # Reset storage (useful for testing)
+    def reset_storage!
+      @storage = nil
+      @storage_backend = nil
+    end
+
+    # Redis configuration
+    def redis
+      return @redis if defined?(@redis) && @redis
+
+      redis_url = ENV.fetch("RAILSCOPE_REDIS_URL", nil) || ENV.fetch("REDIS_URL", nil)
+      return nil unless redis_url
+
+      require "redis"
+      @redis = Redis.new(url: redis_url)
+    end
+
+    def redis_available?
+      return false unless redis
+
+      redis.ping == "PONG"
+    rescue StandardError
+      false
     end
 
     def ignore_paths
@@ -73,7 +126,7 @@ module Railscope
       return false if defined?(Rails::Generators)
 
       @checking_ready = true
-      @ready = Entry.table_exists?
+      @ready = storage.ready?
       @checking_ready = false
       @ready
     rescue StandardError
