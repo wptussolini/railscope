@@ -6,6 +6,7 @@ require_relative "subscribers/query_subscriber"
 require_relative "subscribers/exception_subscriber"
 require_relative "subscribers/job_subscriber"
 require_relative "subscribers/command_subscriber"
+require_relative "subscribers/view_subscriber"
 
 module Railscope
   class Engine < ::Rails::Engine
@@ -42,6 +43,15 @@ module Railscope
         ActiveSupport.on_load(:action_controller) do
           Railscope::Subscribers::RequestSubscriber.subscribe
           Railscope::Subscribers::ExceptionSubscriber.subscribe
+        end
+      end
+
+      # ActionView subscribers
+      if defined?(ActionView::Base)
+        Railscope::Subscribers::ViewSubscriber.subscribe
+      else
+        ActiveSupport.on_load(:action_view) do
+          Railscope::Subscribers::ViewSubscriber.subscribe
         end
       end
 

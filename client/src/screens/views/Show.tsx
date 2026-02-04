@@ -4,21 +4,19 @@ import { getEntry } from '@/api/entries'
 import { Entry } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/Table'
-import { MethodBadge, StatusBadge, TypeBadge } from '@/components/ui/Badge'
+import { TypeBadge } from '@/components/ui/Badge'
 import { JsonViewer } from '@/components/ui/JsonViewer'
 import { timeAgo, groupEntriesByType } from '@/lib/utils'
 
-type TabType = 'payload' | 'headers'
-type ResponseTabType = 'response' | 'response_headers' | 'session'
+type TabType = 'data' | 'properties'
 
-export default function RequestsShow() {
+export default function ViewsShow() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [entry, setEntry] = useState<Entry | null>(null)
   const [batch, setBatch] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
-  const [requestTab, setRequestTab] = useState<TabType>('payload')
-  const [responseTab, setResponseTab] = useState<ResponseTabType>('response')
+  const [activeTab, setActiveTab] = useState<TabType>('data')
 
   useEffect(() => {
     loadEntry()
@@ -57,34 +55,43 @@ export default function RequestsShow() {
   const payload = entry.payload as Record<string, unknown>
   const groupedBatch = groupEntriesByType(batch)
 
-  // Get tab content
-  const getRequestTabContent = () => {
-    if (requestTab === 'payload') {
-      return payload.payload || {}
+  function getViewTypeBadge(viewType: string) {
+    const colors: Record<string, string> = {
+      template: 'bg-blue-500/20 text-blue-400',
+      partial: 'bg-purple-500/20 text-purple-400',
+      layout: 'bg-green-500/20 text-green-400'
     }
-    return payload.headers || {}
+    return (
+      <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[viewType] || 'bg-gray-500/20 text-gray-400'}`}>
+        {viewType}
+      </span>
+    )
   }
 
-  const getResponseTabContent = () => {
-    if (responseTab === 'response') {
-      return payload.response || {}
+  const getTabContent = () => {
+    if (activeTab === 'data') {
+      return payload.data || {}
     }
-    if (responseTab === 'response_headers') {
-      return payload.response_headers || {}
+    return {
+      name: payload.name,
+      path: payload.path,
+      full_path: payload.full_path,
+      view_type: payload.view_type,
+      layout: payload.layout,
+      duration: payload.duration
     }
-    return payload.session || {}
   }
 
   return (
     <div className="p-6">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/requests')}
+          onClick={() => navigate('/views')}
           className="text-blue-400 hover:text-blue-300 text-sm mb-4 inline-block"
         >
-          ← Back to requests
+          ← Back to views
         </button>
-        <h1 className="text-2xl font-semibold text-white">Request Details</h1>
+        <h1 className="text-2xl font-semibold text-white">View Details</h1>
       </div>
 
       {/* Attributes Table */}
@@ -92,15 +99,15 @@ export default function RequestsShow() {
         <Table>
           <TableBody>
             <TableRow>
-              <TableCell className="text-dark-muted w-40">Method</TableCell>
+              <TableCell className="text-dark-muted w-40">Type</TableCell>
               <TableCell>
-                <MethodBadge method={String(payload.method)} />
+                {getViewTypeBadge(String(payload.view_type))}
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="text-dark-muted">Controller Action</TableCell>
-              <TableCell className="font-mono text-sm">
-                {String(payload.controller_action || `${payload.controller}@${payload.action}`)}
+              <TableCell className="text-dark-muted">Name</TableCell>
+              <TableCell className="font-mono text-sm text-white">
+                {String(payload.name)}
               </TableCell>
             </TableRow>
             <TableRow>
@@ -108,100 +115,49 @@ export default function RequestsShow() {
               <TableCell className="font-mono text-sm">{String(payload.path)}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="text-dark-muted">Status</TableCell>
-              <TableCell>
-                <StatusBadge status={Number(payload.status)} />
-              </TableCell>
+              <TableCell className="text-dark-muted">Full Path</TableCell>
+              <TableCell className="font-mono text-xs text-dark-muted break-all">{String(payload.full_path)}</TableCell>
             </TableRow>
+            {Boolean(payload.layout) && (
+              <TableRow>
+                <TableCell className="text-dark-muted">Layout</TableCell>
+                <TableCell className="font-mono text-sm">{String(payload.layout)}</TableCell>
+              </TableRow>
+            )}
             <TableRow>
               <TableCell className="text-dark-muted">Duration</TableCell>
               <TableCell>{String(payload.duration ?? '-')} ms</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-dark-muted">IP Address</TableCell>
-              <TableCell>{String(payload.ip_address || '-')}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-dark-muted">Hostname</TableCell>
-              <TableCell className="font-mono text-sm">{String(payload.hostname || '-')}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-dark-muted">DB Runtime</TableCell>
-              <TableCell>{payload.db_runtime ? `${payload.db_runtime} ms` : '-'}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-dark-muted">View Runtime</TableCell>
-              <TableCell>{payload.view_runtime ? `${payload.view_runtime} ms` : '-'}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </Card>
 
-      {/* Request Card with Tabs */}
+      {/* Data Card with Tabs */}
       <Card className="mb-5 overflow-hidden">
         <div className="flex border-b border-dark-border">
           <button
             className={`px-4 py-3 text-sm font-medium transition-colors ${
-              requestTab === 'payload'
+              activeTab === 'data'
                 ? 'text-white bg-dark-card border-b-2 border-blue-500'
                 : 'text-dark-muted hover:text-white'
             }`}
-            onClick={() => setRequestTab('payload')}
+            onClick={() => setActiveTab('data')}
           >
-            Payload
+            View Data
           </button>
           <button
             className={`px-4 py-3 text-sm font-medium transition-colors ${
-              requestTab === 'headers'
+              activeTab === 'properties'
                 ? 'text-white bg-dark-card border-b-2 border-blue-500'
                 : 'text-dark-muted hover:text-white'
             }`}
-            onClick={() => setRequestTab('headers')}
+            onClick={() => setActiveTab('properties')}
           >
-            Headers
+            Properties
           </button>
         </div>
         <CardContent className="p-0">
-          <JsonViewer data={getRequestTabContent()} className="rounded-t-none border-0" />
-        </CardContent>
-      </Card>
-
-      {/* Response Card with Tabs */}
-      <Card className="mb-5 overflow-hidden">
-        <div className="flex border-b border-dark-border">
-          <button
-            className={`px-4 py-3 text-sm font-medium transition-colors ${
-              responseTab === 'response'
-                ? 'text-white bg-dark-card border-b-2 border-blue-500'
-                : 'text-dark-muted hover:text-white'
-            }`}
-            onClick={() => setResponseTab('response')}
-          >
-            Response
-          </button>
-          <button
-            className={`px-4 py-3 text-sm font-medium transition-colors ${
-              responseTab === 'response_headers'
-                ? 'text-white bg-dark-card border-b-2 border-blue-500'
-                : 'text-dark-muted hover:text-white'
-            }`}
-            onClick={() => setResponseTab('response_headers')}
-          >
-            Headers
-          </button>
-          <button
-            className={`px-4 py-3 text-sm font-medium transition-colors ${
-              responseTab === 'session'
-                ? 'text-white bg-dark-card border-b-2 border-blue-500'
-                : 'text-dark-muted hover:text-white'
-            }`}
-            onClick={() => setResponseTab('session')}
-          >
-            Session
-          </button>
-        </div>
-        <CardContent className="p-0">
-          <JsonViewer data={getResponseTabContent()} className="rounded-t-none border-0" />
+          <JsonViewer data={getTabContent()} className="rounded-t-none border-0" />
         </CardContent>
       </Card>
 

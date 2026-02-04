@@ -21,6 +21,7 @@ import GatesIndex from './screens/gates/Index'
 import CacheIndex from './screens/cache/Index'
 import RedisIndex from './screens/redis/Index'
 import ViewsIndex from './screens/views/Index'
+import ViewsShow from './screens/views/Show'
 import ClientRequestsIndex from './screens/client-requests/Index'
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
         <Route path="/cache" element={<CacheIndex />} />
         <Route path="/redis" element={<RedisIndex />} />
         <Route path="/views" element={<ViewsIndex />} />
+        <Route path="/views/:id" element={<ViewsShow />} />
         <Route path="/client-requests" element={<ClientRequestsIndex />} />
       </Routes>
     </Layout>
