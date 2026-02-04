@@ -11,7 +11,6 @@ module Railscope
         return if @subscribed
 
         @subscribed = true
-        puts "[Railscope] JobSubscriber.subscribe called!"
 
         ActiveSupport::Notifications.subscribe(ENQUEUE_EVENT) do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
@@ -45,7 +44,6 @@ module Railscope
         return if ignore_job?(event.payload[:job])
 
         job = event.payload[:job]
-        puts "[Railscope] record_enqueue - batch_id: #{context.batch_id}, job: #{job.class.name}"
 
         create_entry!(
           entry_type: "job_enqueue",
@@ -65,8 +63,6 @@ module Railscope
 
         job = event.payload[:job]
         exception_object = event.payload[:exception_object]
-
-        puts "[Railscope] record_perform - batch_id: #{context.batch_id}, job: #{job.class.name}"
 
         # Create the job perform entry
         create_entry!(
@@ -218,8 +214,6 @@ module Railscope
         ctx[:recording] = true
         ctx[:job_class] = job.class.name
         ctx[:job_id] = job.job_id
-
-        puts "[Railscope] setup_job_context - batch_id: #{new_batch_id}, job: #{job.class.name}"
       end
 
       def create_exception_entry!(job, exception)

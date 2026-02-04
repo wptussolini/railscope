@@ -1,8 +1,20 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { Entry } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+export function groupEntriesByType(entries: Entry[]): Record<string, Entry[]> {
+  return entries.reduce((acc, entry) => {
+    const type = entry.entry_type
+    if (!acc[type]) {
+      acc[type] = []
+    }
+    acc[type].push(entry)
+    return acc
+  }, {} as Record<string, Entry[]>)
 }
 
 export function timeAgo(date: string): string {

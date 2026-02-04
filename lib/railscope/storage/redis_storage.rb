@@ -19,6 +19,41 @@ module Railscope
         entry
       end
 
+      def update_by_batch(batch_id:, entry_type:, payload_updates:)
+        # Find entries in this batch with the given type
+        uuids = redis.zrevrange(batch_key(batch_id), 0, -1)
+        return nil if uuids.empty?
+
+        # Find the entry of the specified type
+        uuids.each do |uuid|
+          entry = find(uuid)
+          next unless entry && entry.entry_type == entry_type
+
+          # Merge payload updates
+          updated_payload = entry.payload.merge(payload_updates)
+          updated_entry = EntryData.new(
+            uuid: entry.uuid,
+            batch_id: entry.batch_id,
+            family_hash: entry.family_hash,
+            entry_type: entry.entry_type,
+            payload: updated_payload,
+            tags: entry.tags,
+            should_display_on_index: entry.displayable?,
+            occurred_at: entry.occurred_at,
+            created_at: entry.created_at,
+            updated_at: Time.current
+          )
+
+          # Re-store the entry (overwrites the existing one)
+          ttl = Railscope.retention_days.days.to_i
+          redis.set(entry_key(uuid), updated_entry.to_json, ex: ttl)
+
+          return updated_entry
+        end
+
+        nil
+      end
+
       def find(uuid)
         json = redis.get(entry_key(uuid))
         return nil unless json
