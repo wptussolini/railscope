@@ -5,7 +5,7 @@ module Railscope
     def entry_title(entry)
       case entry.entry_type
       when "request"
-        "#{entry.payload['method']} #{entry.payload['path']}"
+        "#{entry.payload["method"]} #{entry.payload["path"]}"
       when "query"
         entry.payload["name"] || entry.payload["sql"].to_s.truncate(50)
       when "exception"
@@ -20,7 +20,7 @@ module Railscope
     def timeline_summary(entry)
       case entry.entry_type
       when "request"
-        "#{entry.payload['method']} #{entry.payload['path']}"
+        "#{entry.payload["method"]} #{entry.payload["path"]}"
       when "query"
         entry.payload["sql"].to_s.truncate(40)
       when "exception"
@@ -68,12 +68,12 @@ module Railscope
         else
           content_tag(:div, class: "json-array") do
             safe_join([
-              content_tag(:span, "[", class: "json-bracket"),
-              content_tag(:div, class: "json-array-items") do
-                safe_join(value.map { |v| render_json_value(v, indent: indent + 1) })
-              end,
-              content_tag(:span, "]", class: "json-bracket")
-            ])
+                        content_tag(:span, "[", class: "json-bracket"),
+                        content_tag(:div, class: "json-array-items") do
+                          safe_join(value.map { |v| render_json_value(v, indent: indent + 1) })
+                        end,
+                        content_tag(:span, "]", class: "json-bracket")
+                      ])
           end
         end
       when Hash
@@ -115,11 +115,11 @@ module Railscope
 
       content_tag(:span, class: "request-summary") do
         safe_join([
-          content_tag(:span, payload["method"], class: "method"),
-          content_tag(:span, payload["path"], class: "path"),
-          content_tag(:span, payload["status"], class: "status #{status_class}"),
-          content_tag(:span, "#{payload['duration']}ms", class: "duration")
-        ], " ")
+                    content_tag(:span, payload["method"], class: "method"),
+                    content_tag(:span, payload["path"], class: "path"),
+                    content_tag(:span, payload["status"], class: "status #{status_class}"),
+                    content_tag(:span, "#{payload["duration"]}ms", class: "duration")
+                  ], " ")
       end
     end
 
@@ -129,18 +129,18 @@ module Railscope
 
       content_tag(:span, class: "query-summary") do
         safe_join([
-          content_tag(:code, sql, class: "sql"),
-          content_tag(:span, "#{duration}ms", class: "duration")
-        ], " ")
+                    content_tag(:code, sql, class: "sql"),
+                    content_tag(:span, "#{duration}ms", class: "duration")
+                  ], " ")
       end
     end
 
     def render_exception_summary(payload)
       content_tag(:span, class: "exception-summary") do
         safe_join([
-          content_tag(:span, payload["class"], class: "exception-class"),
-          content_tag(:span, payload["message"].to_s.truncate(60), class: "exception-message")
-        ], ": ")
+                    content_tag(:span, payload["class"], class: "exception-class"),
+                    content_tag(:span, payload["message"].to_s.truncate(60), class: "exception-message")
+                  ], ": ")
       end
     end
 
@@ -148,8 +148,8 @@ module Railscope
       content_tag(:span, class: "job-summary") do
         safe_join([
           content_tag(:span, payload["job_class"], class: "job-class"),
-          content_tag(:span, "[#{payload['queue_name']}]", class: "queue-name"),
-          payload["duration"] ? content_tag(:span, "#{payload['duration']}ms", class: "duration") : nil
+          content_tag(:span, "[#{payload["queue_name"]}]", class: "queue-name"),
+          payload["duration"] ? content_tag(:span, "#{payload["duration"]}ms", class: "duration") : nil
         ].compact, " ")
       end
     end

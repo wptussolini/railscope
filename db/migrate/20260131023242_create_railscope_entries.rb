@@ -36,6 +36,6 @@ class CreateRailscopeEntries < ActiveRecord::Migration[7.0]
     add_index :railscope_entries, :entry_type
     add_index :railscope_entries, :occurred_at
     add_index :railscope_entries, :tags, using: :gin
-    add_index :railscope_entries, [:entry_type, :should_display_on_index], name: "idx_railscope_type_displayable"
+    add_index :railscope_entries, %i[entry_type should_display_on_index], name: "idx_railscope_type_displayable"
   end
 end

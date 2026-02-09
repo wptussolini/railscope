@@ -8,16 +8,22 @@ Gem::Specification.new do |spec|
   spec.authors = ["Phelipe Tussolini"]
   spec.email = ["phelipe@taller.net.br"]
 
-  spec.summary = "TODO: Write a short summary, because RubyGems requires one."
-  spec.description = "TODO: Write a longer description or delete this line."
-  spec.homepage = "TODO: Put your gem's website or public repo URL here."
+  spec.summary = "A debug assistant for Rails applications inspired by Laravel Telescope"
+  spec.description = <<~DESC
+    Railscope provides deep insight into requests, exceptions, database queries, \
+    background jobs, view rendering, and Rake tasks in your Rails application. \
+    It features a React-based dark-themed dashboard, automatic sensitive data filtering, \
+    flexible storage backends (PostgreSQL and Redis), batch correlation of related events, \
+    and zero external gem dependencies beyond Rails itself.
+  DESC
+  spec.homepage = "https://github.com/wptussolini/rails-telescope"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
-  spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
+  spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "TODO: Put your gem's public repo URL here."
-    spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
+  spec.metadata["source_code_uri"] = "https://github.com/wptussolini/rails-telescope"
+  spec.metadata["changelog_uri"] = "https://github.com/wptussolini/rails-telescope/blob/main/railscope/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.

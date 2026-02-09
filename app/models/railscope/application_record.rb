@@ -7,8 +7,6 @@ module Railscope
     # Support for separate database connection when RAILSCOPE_DATABASE_URL is configured
     # This isolates Railscope's writes from the main application database,
     # preventing lock contention during high-traffic periods.
-    if ENV["RAILSCOPE_DATABASE_URL"].present?
-      connects_to database: { writing: :railscope, reading: :railscope }
-    end
+    connects_to database: { writing: :railscope, reading: :railscope } if ENV["RAILSCOPE_DATABASE_URL"].present?
   end
 end

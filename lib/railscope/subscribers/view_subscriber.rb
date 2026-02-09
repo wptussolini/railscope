@@ -125,7 +125,7 @@ module Railscope
         return "" if identifier.blank?
 
         if identifier.include?(Rails.root.to_s)
-          identifier.sub(Rails.root.to_s + "/", "")
+          identifier.sub(Rails.root.join("").to_s, "")
         else
           identifier
         end

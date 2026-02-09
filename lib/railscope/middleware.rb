@@ -42,9 +42,7 @@ module Railscope
       # Try to get from ActionDispatch::Response stored in env
       if env["action_dispatch.response"]
         response = env["action_dispatch.response"]
-        if response.respond_to?(:body)
-          body = response.body.to_s
-        end
+        body = response.body.to_s if response.respond_to?(:body)
       end
 
       # Try action_controller.instance
@@ -56,9 +54,7 @@ module Railscope
       end
 
       # Truncate if too large
-      if body.bytesize > RESPONSE_SIZE_LIMIT
-        body = body.byteslice(0, RESPONSE_SIZE_LIMIT)
-      end
+      body = body.byteslice(0, RESPONSE_SIZE_LIMIT) if body.bytesize > RESPONSE_SIZE_LIMIT
 
       body
     rescue StandardError => e
@@ -77,16 +73,24 @@ module Railscope
       return unless Railscope.ready?
 
       headers = context_data[:headers]
-      response_headers = headers.respond_to?(:to_h) ? headers.to_h : headers.to_hash rescue {}
+      response_headers = begin
+        headers.respond_to?(:to_h) ? headers.to_h : headers.to_hash
+      rescue StandardError
+        {}
+      end
       session_data = extract_session_from_env(context_data[:env])
 
       # Parse JSON if applicable
       content_type = response_headers["Content-Type"] || response_headers["content-type"] || ""
-      looks_like_json = response_body.to_s.start_with?("{") || response_body.to_s.start_with?("[")
+      looks_like_json = response_body.to_s.start_with?("{", "[")
       is_json = content_type.include?("application/json") || looks_like_json
 
       parsed_body = if is_json
-                      JSON.parse(response_body) rescue response_body
+                      begin
+                        JSON.parse(response_body)
+                      rescue StandardError
+                        response_body
+                      end
                     else
                       response_body
                     end
@@ -148,8 +152,6 @@ module Railscope
       # Store env reference to capture session later
       context[:env] = env
     end
-
-
 
     def extract_ip(env)
       env["HTTP_X_FORWARDED_FOR"]&.split(",")&.first&.strip ||

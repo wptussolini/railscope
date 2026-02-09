@@ -26,7 +26,7 @@ module Railscope
   STORAGE_REDIS = :redis
 
   class << self
-    attr_writer :retention_days, :redis, :storage_backend
+    attr_writer :retention_days, :redis, :storage_backend, :ignore_paths
     attr_accessor :authenticate_with
 
     def enabled?
@@ -86,10 +86,6 @@ module Railscope
       @ignore_paths ||= DEFAULT_IGNORE_PATHS.dup
     end
 
-    def ignore_paths=(paths)
-      @ignore_paths = paths
-    end
-
     def add_ignore_paths(*paths)
       @ignore_paths = ignore_paths.concat(paths.flatten).uniq
     end
@@ -104,9 +100,7 @@ module Railscope
       authenticate_with.call(controller)
     end
 
-    def filter(payload)
-      Filter.filter(payload)
-    end
+    delegate :filter, to: :Filter
 
     def add_sensitive_keys(*keys)
       Filter.add_sensitive_keys(*keys)

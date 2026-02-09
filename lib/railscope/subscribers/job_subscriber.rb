@@ -74,9 +74,7 @@ module Railscope
         )
 
         # Also create a separate exception entry if job failed
-        if exception_object
-          create_exception_entry!(job, exception_object)
-        end
+        create_exception_entry!(job, exception_object) if exception_object
 
         # Clear context after job completes
         Railscope::Context.clear!
@@ -121,7 +119,7 @@ module Railscope
         job = event.payload[:job]
         tags = ["job", action, job.queue_name]
         tags << "failed" if event.payload[:exception_object].present?
-        tags << job.class.name.underscore.gsub("/", "_")
+        tags << job.class.name.underscore.tr("/", "_")
         tags.compact
       end
 
@@ -241,9 +239,9 @@ module Railscope
       end
 
       def build_exception_tags(exception, job)
-        tags = ["exception", "job"]
-        tags << exception.class.name.underscore.gsub("/", "_") if exception.class.name
-        tags << job.class.name.underscore.gsub("/", "_")
+        tags = %w[exception job]
+        tags << exception.class.name.underscore.tr("/", "_") if exception.class.name
+        tags << job.class.name.underscore.tr("/", "_")
         tags
       end
     end

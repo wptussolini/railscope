@@ -81,7 +81,7 @@ module Railscope
       end
 
       def filter_params(params)
-        return nil if params.nil? || params.empty?
+        return nil if params.blank?
 
         # Convert ActionController::Parameters to hash
         params_hash = if params.respond_to?(:to_unsafe_h)

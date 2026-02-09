@@ -5,13 +5,13 @@ module Railscope
     class RedisStorage < Base
       # Key prefixes
       PREFIX = "railscope"
-      ENTRY_KEY = "#{PREFIX}:entry:%s"           # Hash with entry data
-      ALL_ENTRIES_KEY = "#{PREFIX}:entries"      # Sorted set (score=timestamp)
-      DISPLAYABLE_KEY = "#{PREFIX}:displayable"  # Sorted set of displayable entries
-      BATCH_KEY = "#{PREFIX}:batch:%s"           # Sorted set per batch
-      FAMILY_KEY = "#{PREFIX}:family:%s"         # Sorted set per family
-      TYPE_KEY = "#{PREFIX}:type:%s"             # Sorted set per entry type
-      TAG_KEY = "#{PREFIX}:tag:%s"               # Set per tag
+      ENTRY_KEY = "#{PREFIX}:entry:%s".freeze           # Hash with entry data
+      ALL_ENTRIES_KEY = "#{PREFIX}:entries".freeze      # Sorted set (score=timestamp)
+      DISPLAYABLE_KEY = "#{PREFIX}:displayable".freeze  # Sorted set of displayable entries
+      BATCH_KEY = "#{PREFIX}:batch:%s".freeze           # Sorted set per batch
+      FAMILY_KEY = "#{PREFIX}:family:%s".freeze         # Sorted set per family
+      TYPE_KEY = "#{PREFIX}:type:%s".freeze             # Sorted set per entry type
+      TAG_KEY = "#{PREFIX}:tag:%s".freeze               # Set per tag
 
       def write(attributes)
         entry = build_entry(attributes)
@@ -227,13 +227,13 @@ module Railscope
         # Apply additional filters if needed
         if filters[:tag].present?
           tag_members = redis.smembers(tag_key(filters[:tag]))
-          uuids = uuids & tag_members
+          uuids &= tag_members
         end
 
         # If displayable filter and we're using a type/batch/family key
         if displayable_only && !%W[#{DISPLAYABLE_KEY} #{ALL_ENTRIES_KEY}].include?(base_key)
           displayable_members = redis.zrange(DISPLAYABLE_KEY, 0, -1)
-          uuids = uuids & displayable_members
+          uuids &= displayable_members
         end
 
         uuids
@@ -298,13 +298,13 @@ module Railscope
         # Apply tag filter
         if filters[:tag].present?
           tag_members = redis.smembers(tag_key(filters[:tag]))
-          uuids = uuids & tag_members
+          uuids &= tag_members
         end
 
         # Apply displayable filter
         if displayable_only && base_key != DISPLAYABLE_KEY
           displayable_members = redis.zrange(DISPLAYABLE_KEY, 0, -1)
-          uuids = uuids & displayable_members
+          uuids &= displayable_members
         end
 
         uuids.size

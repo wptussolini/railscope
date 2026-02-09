@@ -102,7 +102,7 @@ module Railscope
         # Bearer tokens
         return true if value.start_with?("Bearer ")
         # Base64 encoded secrets (common pattern)
-        return true if value.match?(/\A[A-Za-z0-9+\/=]{40,}\z/)
+        return true if value.match?(%r{\A[A-Za-z0-9+/=]{40,}\z})
         # JWT tokens
         return true if value.match?(/\Aey[A-Za-z0-9_-]+\.ey[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\z/)
 

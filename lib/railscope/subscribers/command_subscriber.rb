@@ -90,9 +90,7 @@ module Railscope
           )
 
           # Also create a separate exception entry (appears in exceptions list)
-          if caught_exception
-            create_exception_entry!(task, caught_exception)
-          end
+          create_exception_entry!(task, caught_exception) if caught_exception
 
           # Clear context after command completes
           Railscope::Context.clear!
@@ -179,8 +177,8 @@ module Railscope
       end
 
       def build_exception_tags(exception)
-        tags = ["exception", "command"]
-        tags << exception.class.name.underscore.gsub("/", "_") if exception.class.name
+        tags = %w[exception command]
+        tags << exception.class.name.underscore.tr("/", "_") if exception.class.name
         tags
       end
 

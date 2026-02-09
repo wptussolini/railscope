@@ -86,8 +86,6 @@ module Railscope
       self[:user_id] = value
     end
 
-    def empty?
-      @store.empty?
-    end
+    delegate :empty?, to: :@store
   end
 end

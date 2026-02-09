@@ -11,7 +11,7 @@ module Railscope
       end
 
       def find(uuid)
-        record = Entry.find_by_uuid(uuid)
+        record = Entry.find_by(uuid: uuid)
         return nil unless record
 
         EntryData.from_active_record(record)

@@ -6,7 +6,7 @@
 
 namespace :sample do
   desc "Echo a message (for testing command capture)"
-  task :echo, [:message, :count] => :environment do |_task, args|
+  task :echo, %i[message count] => :environment do |_task, args|
     message = args[:message] || "Hello from Railscope!"
     count = (args[:count] || 1).to_i
 

@@ -29,7 +29,11 @@ module Railscope
         value = attributes[attr]
         # Handle time parsing for string values
         if %i[occurred_at created_at updated_at].include?(attr) && value.is_a?(String)
-          value = Time.zone.parse(value) rescue value
+          value = begin
+            Time.zone.parse(value)
+          rescue StandardError
+            value
+          end
         end
         send("#{attr}=", value)
       end
@@ -41,8 +45,8 @@ module Railscope
     end
 
     def to_h
-      ATTRIBUTES.each_with_object({}) do |attr, hash|
-        hash[attr] = send(attr)
+      ATTRIBUTES.index_with do |attr|
+        send(attr)
       end
     end
 

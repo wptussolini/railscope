@@ -19,7 +19,7 @@ module Railscope
       def record(event)
         return unless Railscope.enabled?
         return unless Railscope.ready?
-        return unless event.payload[:exception].present?
+        return if event.payload[:exception].blank?
 
         create_entry!(
           entry_type: "exception",
@@ -87,7 +87,7 @@ module Railscope
       def build_tags(event)
         exception_class = event.payload[:exception]&.first
         tags = ["exception"]
-        tags << exception_class.underscore.gsub("/", "_") if exception_class
+        tags << exception_class.underscore.tr("/", "_") if exception_class
         tags
       end
 
