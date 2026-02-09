@@ -12,6 +12,9 @@ module Railscope
 
         @subscribed = true
 
+        # Include controller tracking in ApplicationController
+        setup_controller_tracking
+
         ActiveSupport::Notifications.subscribe(TEMPLATE_EVENT) do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           new.record_template(event)
@@ -20,6 +23,37 @@ module Railscope
         ActiveSupport::Notifications.subscribe(PARTIAL_EVENT) do |*args|
           event = ActiveSupport::Notifications::Event.new(*args)
           new.record_partial(event)
+        end
+      end
+
+      def self.setup_controller_tracking
+        return if @controller_tracking_setup
+
+        @controller_tracking_setup = true
+
+        controller_module = Module.new do
+          extend ActiveSupport::Concern
+
+          included do
+            around_action :railscope_track_controller
+          end
+
+          private
+
+          def railscope_track_controller
+            Thread.current[:railscope_current_controller] = self
+            yield
+          ensure
+            Thread.current[:railscope_current_controller] = nil
+          end
+        end
+
+        if defined?(ActionController::Base)
+          ActionController::Base.include(controller_module)
+        else
+          ActiveSupport.on_load(:action_controller_base) do
+            include controller_module
+          end
         end
       end
 
@@ -99,7 +133,7 @@ module Railscope
 
       def extract_view_data
         # Try to get instance variables from the current controller
-        controller = Thread.current[:current_controller]
+        controller = Thread.current[:railscope_current_controller]
         return nil unless controller
 
         # Get instance variables that were set in the controller
