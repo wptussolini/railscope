@@ -3,13 +3,23 @@
 # Railscope Configuration
 # =======================
 #
-# Railscope is disabled by default. Enable it by setting
-# the RAILSCOPE_ENABLED environment variable:
+# Railscope is disabled by default. Enable it via environment variable:
 #
 #   RAILSCOPE_ENABLED=true
 #
+# Or programmatically (useful with application.yml, credentials, etc.):
+#
+#   config.enabled = true
+#
 
 Railscope.configure do |config|
+  # Enable/Disable
+  # --------------
+  # Set this directly if your project doesn't use ENV variables
+  # (e.g., application.yml without Figaro, Rails credentials, etc.)
+  #
+  # config.enabled = true
+
   # Retention Period
   # ----------------
   # Number of days to keep entries before purging.

@@ -24,7 +24,8 @@ module Railscope
         say ""
         say "Next steps:"
         say "  1. Run migrations: rails db:migrate"
-        say "  2. Enable Railscope: add RAILSCOPE_ENABLED=true to your .env"
+        say "  2. Enable Railscope: set RAILSCOPE_ENABLED=true in your environment"
+        say "     or set config.enabled = true in config/initializers/railscope.rb"
         say "  3. Start your server and visit /railscope"
         say ""
       end

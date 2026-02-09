@@ -29,7 +29,13 @@ module Railscope
     attr_writer :retention_days, :redis, :storage_backend, :ignore_paths
     attr_accessor :authenticate_with
 
+    def enabled=(value)
+      @enabled = value
+    end
+
     def enabled?
+      return @enabled if defined?(@enabled) && !@enabled.nil?
+
       %w[true 1].include?(ENV.fetch("RAILSCOPE_ENABLED", nil))
     end
 
