@@ -14,6 +14,7 @@ import DumpsIndex from './screens/dumps/Index'
 import QueriesIndex from './screens/queries/Index'
 import QueriesShow from './screens/queries/Show'
 import ModelsIndex from './screens/models/Index'
+import ModelsShow from './screens/models/Show'
 import EventsIndex from './screens/events/Index'
 import MailIndex from './screens/mail/Index'
 import NotificationsIndex from './screens/notifications/Index'
@@ -43,6 +44,7 @@ function App() {
         <Route path="/queries" element={<QueriesIndex />} />
         <Route path="/queries/:id" element={<QueriesShow />} />
         <Route path="/models" element={<ModelsIndex />} />
+        <Route path="/models/:id" element={<ModelsShow />} />
         <Route path="/events" element={<EventsIndex />} />
         <Route path="/mail" element={<MailIndex />} />
         <Route path="/notifications" element={<NotificationsIndex />} />

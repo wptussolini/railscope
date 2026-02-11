@@ -106,7 +106,9 @@ module Railscope
       authenticate_with.call(controller)
     end
 
-    delegate :filter, to: :Filter
+    def filter(payload)
+      Filter.filter(payload)
+    end
 
     def add_sensitive_keys(*keys)
       Filter.add_sensitive_keys(*keys)

@@ -289,6 +289,7 @@ function getEntryPath(entry: Entry): string {
     case 'job_perform': return `/jobs/${entry.id}`
     case 'request': return `/requests/${entry.id}`
     case 'command': return `/commands/${entry.id}`
+    case 'model': return `/models/${entry.id}`
     case 'view': return `/views/${entry.id}`
     default: return `/${entry.entry_type}s/${entry.id}`
   }
@@ -307,6 +308,8 @@ function getEntryDescription(entry: Entry, payload: Record<string, unknown>): st
     case 'job_enqueue':
     case 'job_perform':
       return `Job: ${payload.job_class}`
+    case 'model':
+      return `${payload.action} ${payload.model}`
     case 'view':
       return `${payload.view_type}: ${payload.name || payload.path}`
     default:

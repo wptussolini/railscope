@@ -7,6 +7,7 @@ require_relative "subscribers/exception_subscriber"
 require_relative "subscribers/job_subscriber"
 require_relative "subscribers/command_subscriber"
 require_relative "subscribers/view_subscriber"
+require_relative "subscribers/model_subscriber"
 
 module Railscope
   class Engine < ::Rails::Engine
@@ -58,9 +59,11 @@ module Railscope
       # ActiveRecord subscribers
       if defined?(ActiveRecord::Base)
         Railscope::Subscribers::QuerySubscriber.subscribe
+        Railscope::Subscribers::ModelSubscriber.subscribe
       else
         ActiveSupport.on_load(:active_record) do
           Railscope::Subscribers::QuerySubscriber.subscribe
+          Railscope::Subscribers::ModelSubscriber.subscribe
         end
       end
 

@@ -369,6 +369,7 @@ function getEntryPath(entry: Entry): string {
     case 'job_enqueue':
     case 'job_perform': return `/jobs/${entry.id}`
     case 'request': return `/requests/${entry.id}`
+    case 'model': return `/models/${entry.id}`
     default: return `/${entry.entry_type}s/${entry.id}`
   }
 }
