@@ -200,23 +200,27 @@ module Railscope
     ].freeze
 
     def self.safe_serialize(value, depth: 0)
-      return "..." if depth > 3
+      return "..." if depth > 5
 
       case value
       when String, Numeric, TrueClass, FalseClass, NilClass
         value
       when Symbol
         value.to_s
+      when Time, DateTime
+        value.iso8601
+      when Date
+        value.to_s
+      when ActiveRecord::Relation
+        value.limit(50).map { |record| safe_serialize(record, depth: depth + 1) }
+      when ActiveRecord::Base
+        Railscope.filter(value.attributes.transform_values { |v| safe_serialize(v, depth: depth + 1) })
       when Array
-        value.first(20).map { |v| safe_serialize(v, depth: depth + 1) }
+        value.first(50).map { |v| safe_serialize(v, depth: depth + 1) }
       when Hash
         value.transform_values { |v| safe_serialize(v, depth: depth + 1) }
-      when ActiveRecord::Base
-        { _class: value.class.name, id: value.try(:id) }
-      when ActiveRecord::Relation
-        { _class: value.klass.name, count: value.count }
       else
-        value.class.name
+        value.to_s
       end
     rescue StandardError
       value.class.name
