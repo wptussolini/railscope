@@ -90,22 +90,11 @@ module Railscope
         "session" => session_data
       }
 
-      storage = Railscope.storage
-
-      if storage.is_a?(Railscope::Storage::Database)
-        entry = Entry.where(batch_id: context_data[:batch_id], entry_type: "request").order(created_at: :desc).first
-        return unless entry
-
-        entry.payload = entry.payload.merge(payload_updates)
-        entry.save!
-
-      elsif storage.respond_to?(:update_by_batch)
-        storage.update_by_batch(
-          batch_id: context_data[:batch_id],
-          entry_type: "request",
-          payload_updates: payload_updates
-        )
-      end
+      Railscope.storage.update_by_batch(
+        batch_id: context_data[:batch_id],
+        entry_type: "request",
+        payload_updates: payload_updates
+      )
     rescue StandardError => e
       Rails.logger.debug("[Railscope] Failed to update entry with response: #{e.message}")
     end

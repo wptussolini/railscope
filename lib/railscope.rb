@@ -6,7 +6,8 @@ require_relative "railscope/filter"
 require_relative "railscope/entry_data"
 require_relative "railscope/storage/base"
 require_relative "railscope/storage/database"
-require_relative "railscope/storage/redis_storage"
+require_relative "railscope/storage/redis_buffer"
+require_relative "railscope/flush_service"
 require_relative "railscope/middleware"
 require_relative "railscope/engine"
 
@@ -57,7 +58,7 @@ module Railscope
     def storage
       @storage ||= case storage_backend
                    when STORAGE_REDIS
-                     Storage::RedisStorage.new
+                     Storage::RedisBuffer.new
                    else
                      Storage::Database.new
                    end

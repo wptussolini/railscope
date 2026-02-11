@@ -78,7 +78,7 @@ module Railscope
     end
 
     rake_tasks do
-      # Load sample tasks for testing
+      load Railscope::Engine.root.join("lib/tasks/railscope.rake")
       load Railscope::Engine.root.join("lib/tasks/railscope_sample.rake")
 
       # Subscribe to rake tasks after they're loaded

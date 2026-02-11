@@ -10,6 +10,15 @@ module Railscope
         EntryData.from_active_record(record)
       end
 
+      def update_by_batch(batch_id:, entry_type:, payload_updates:)
+        entry = Entry.where(batch_id: batch_id, entry_type: entry_type).order(created_at: :desc).first
+        return nil unless entry
+
+        entry.payload = entry.payload.merge(payload_updates)
+        entry.save!
+        EntryData.from_active_record(entry)
+      end
+
       def find(uuid)
         record = Entry.find_by(uuid: uuid)
         return nil unless record

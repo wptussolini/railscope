@@ -20,6 +20,21 @@ Railscope.configure do |config|
   #
   # config.enabled = true
 
+  # Storage Backend
+  # ---------------
+  # :database - Direct writes to PostgreSQL (simpler, no Redis needed)
+  # :redis    - Buffer in Redis, batch flush to PostgreSQL (faster requests)
+  #
+  # When using :redis, entries are buffered in Redis during requests and
+  # flushed to PostgreSQL periodically via Railscope::FlushService.
+  # You can trigger the flush with:
+  #   - Railscope::FlushService.call (from a job, cron, etc.)
+  #   - rake railscope:flush
+  #
+  # Can also be set via RAILSCOPE_STORAGE env var.
+  #
+  # config.storage_backend = :database
+
   # Retention Period
   # ----------------
   # Number of days to keep entries before purging.
