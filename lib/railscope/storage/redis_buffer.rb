@@ -5,11 +5,13 @@ module Railscope
     class RedisBuffer < Base
       BUFFER_KEY = "railscope:buffer"
       UPDATES_KEY = "railscope:buffer:updates"
+      BUFFER_TTL = 4.hours.to_i
 
       # WRITE → Redis (fast, ~0.1ms)
       def write(attributes)
         entry = build_entry(attributes)
         redis.rpush(BUFFER_KEY, entry.to_json)
+        redis.expire(BUFFER_KEY, BUFFER_TTL)
         entry
       end
 
@@ -21,6 +23,7 @@ module Railscope
           payload_updates: payload_updates
         }
         redis.rpush(UPDATES_KEY, update.to_json)
+        redis.expire(UPDATES_KEY, BUFFER_TTL)
       end
 
       # READ → Database (source of truth)

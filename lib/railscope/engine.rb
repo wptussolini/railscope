@@ -29,8 +29,23 @@ module Railscope
 
     initializer "railscope.migrations" do |app|
       unless app.root.to_s.match?(root.to_s)
-        config.paths["db/migrate"].expanded.each do |expanded_path|
-          app.config.paths["db/migrate"] << expanded_path
+        if railscope_separate_database?
+          # Separate database: copy migrations to db/railscope_migrate/
+          # so they only run against the railscope database
+          target_dir = app.root.join("db", "railscope_migrate")
+          config.paths["db/migrate"].expanded.each do |source_dir|
+            Dir[File.join(source_dir, "*.rb")].each do |migration|
+              target = target_dir.join(File.basename(migration))
+              next if target.exist?
+
+              FileUtils.mkdir_p(target_dir)
+              FileUtils.cp(migration, target)
+            end
+          end
+        else
+          config.paths["db/migrate"].expanded.each do |expanded_path|
+            app.config.paths["db/migrate"] << expanded_path
+          end
         end
       end
     end
@@ -83,6 +98,15 @@ module Railscope
 
       # Subscribe to rake tasks after they're loaded
       Railscope::Subscribers::CommandSubscriber.subscribe
+    end
+
+    private
+
+    def railscope_separate_database?
+      configs = ActiveRecord::Base.configurations.configs_for(env_name: Rails.env)
+      configs.any? { |c| c.name == "railscope" }
+    rescue StandardError
+      false
     end
   end
 end
