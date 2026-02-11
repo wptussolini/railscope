@@ -4,6 +4,8 @@ module Railscope
   class Entry < ApplicationRecord
     self.table_name = "railscope_entries"
 
+    before_create { self.uuid ||= SecureRandom.uuid }
+
     validates :entry_type, presence: true
     validates :occurred_at, presence: true
 
