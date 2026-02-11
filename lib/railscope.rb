@@ -125,7 +125,6 @@ module Railscope
     def ready?
       return @ready if defined?(@ready) && !@ready.nil?
       return false if @checking_ready
-      return false if defined?(Rails::Generators)
 
       @checking_ready = true
       @ready = storage.ready?
