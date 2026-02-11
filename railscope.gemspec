@@ -16,14 +16,14 @@ Gem::Specification.new do |spec|
     flexible storage backends (PostgreSQL and Redis), batch correlation of related events, \
     and zero external gem dependencies beyond Rails itself.
   DESC
-  spec.homepage = "https://https://github.com/wptussolini/railscope"
+  spec.homepage = "https://github.com/wptussolini/railscope"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://https://github.com/wptussolini/railscope"
-  spec.metadata["changelog_uri"] = "https://https://github.com/wptussolini/railscope/blob/main/railscope/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/wptussolini/railscope"
+  spec.metadata["changelog_uri"] = "https://github.com/wptussolini/railscope/blob/main/railscope/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
