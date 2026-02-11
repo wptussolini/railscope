@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Railscope</title>
     <%= csrf_meta_tags %>
-    <link rel="stylesheet" href="<%= railscope.root_path %>assets/app.css">
+    <meta name="railscope-version" content="<%= Railscope::VERSION %>">
+    <link rel="stylesheet" href="<%= railscope.root_path %>assets/app.css?v=<%= Railscope::VERSION %>">
   </head>
   <body class="bg-[#0d1117] text-[#c9d1d9]">
     <%= yield %>
-    <script type="module" src="<%= railscope.root_path %>assets/app.js"></script>
+    <script type="module" src="<%= railscope.root_path %>assets/app.js?v=<%= Railscope::VERSION %>"></script>
   </body>
 </html>

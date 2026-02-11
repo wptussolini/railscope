@@ -44,7 +44,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-dark-border text-xs text-dark-muted">
-        Railscope v0.1.0
+        Railscope v{document.querySelector('meta[name="railscope-version"]')?.getAttribute('content') || '0.0.0'}
       </div>
     </aside>
   )
