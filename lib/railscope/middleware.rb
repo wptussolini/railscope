@@ -80,20 +80,9 @@ module Railscope
       end
       session_data = extract_session_from_env(context_data[:env])
 
-      # Parse JSON if applicable
+      # Determine response type and handle accordingly (like Telescope)
       content_type = response_headers["Content-Type"] || response_headers["content-type"] || ""
-      looks_like_json = response_body.to_s.start_with?("{", "[")
-      is_json = content_type.include?("application/json") || looks_like_json
-
-      parsed_body = if is_json
-                      begin
-                        JSON.parse(response_body)
-                      rescue StandardError
-                        response_body
-                      end
-                    else
-                      response_body
-                    end
+      parsed_body = parse_response_body(response_body, content_type, context_data[:env])
 
       payload_updates = {
         "response" => parsed_body.presence,
@@ -119,6 +108,118 @@ module Railscope
       end
     rescue StandardError => e
       Rails.logger.debug("[Railscope] Failed to update entry with response: #{e.message}")
+    end
+
+    def self.parse_response_body(response_body, content_type, env)
+      body_str = response_body.to_s
+
+      # Empty response
+      return "Empty Response" if body_str.blank?
+
+      # Redirect
+      if env && (location = env["action_dispatch.redirect_url"])
+        return "Redirected to #{location}"
+      end
+
+      # JSON response
+      if content_type.include?("application/json") || body_str.match?(/\A\s*[\[{]/)
+        begin
+          return JSON.parse(body_str)
+        rescue StandardError
+          return body_str.truncate(2000)
+        end
+      end
+
+      # Plain text response
+      if content_type.include?("text/plain")
+        return body_str.truncate(2000)
+      end
+
+      # HTML view response — extract template path and data like Telescope
+      extract_view_response(env) || "HTML Response"
+    end
+
+    def self.extract_view_response(env)
+      return nil unless env
+
+      controller = env["action_controller.instance"]
+      return nil unless controller
+
+      view_path = resolve_view_path(controller)
+      return nil unless view_path
+
+      {
+        "view" => view_path,
+        "data" => extract_controller_data(controller)
+      }
+    rescue StandardError
+      nil
+    end
+
+    def self.resolve_view_path(controller)
+      # Try to get the actual rendered template from the controller
+      if controller.respond_to?(:rendered_format, true) || controller.respond_to?(:controller_path)
+        template_path = "app/views/#{controller.controller_path}/#{controller.action_name}"
+
+        # Try to find the actual file with extension
+        if defined?(Rails.root)
+          candidates = Dir.glob(Rails.root.join("#{template_path}.*"))
+          return candidates.first&.sub("#{Rails.root}/", "") if candidates.any?
+        end
+
+        template_path
+      end
+    rescue StandardError
+      nil
+    end
+
+    def self.extract_controller_data(controller)
+      data = {}
+
+      controller.instance_variables.each do |ivar|
+        name = ivar.to_s.delete_prefix("@")
+
+        # Skip internal Rails/controller variables
+        next if name.start_with?("_")
+        next if IGNORED_INSTANCE_VARS.include?(name)
+
+        value = controller.instance_variable_get(ivar)
+        data[name] = safe_serialize(value)
+      end
+
+      data.presence || {}
+    rescue StandardError
+      {}
+    end
+
+    IGNORED_INSTANCE_VARS = %w[
+      request response marked_for_same_origin_verification
+      performed_redirect action_has_layout lookup_context
+      view_context_class current_renderer view_renderer
+      action_name pressed_key action_status response_body
+    ].freeze
+
+    def self.safe_serialize(value, depth: 0)
+      return "..." if depth > 3
+
+      case value
+      when String, Numeric, TrueClass, FalseClass, NilClass
+        value
+      when Symbol
+        value.to_s
+      when Array
+        value.first(20).map { |v| safe_serialize(v, depth: depth + 1) }
+      when Hash
+        value.transform_values { |v| safe_serialize(v, depth: depth + 1) }
+      when ActiveRecord::Base
+        { _class: value.class.name, id: value.try(:id) }
+      when ActiveRecord::Relation
+        { _class: value.klass.name, count: value.count }
+      else
+        value.class.name
+      end
+    rescue StandardError
+      value.class.name
     end
 
     def self.extract_session_from_env(env)

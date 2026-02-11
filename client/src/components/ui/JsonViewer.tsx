@@ -64,14 +64,27 @@ function JsonValue({ value, indent = 0 }: { value: unknown; indent?: number }) {
     }
     return (
       <div>
-        {entries.map(([key, val], i) => (
-          <div key={key} className="flex">
-            <span className="text-blue-400">"{key}"</span>
-            <span className="text-dark-muted mr-2">:</span>
-            <JsonValue value={val} indent={indent + 1} />
-            {i < entries.length - 1 && <span className="text-dark-muted">,</span>}
-          </div>
-        ))}
+        <span className="text-dark-muted">{'{'}</span>
+        <div className="pl-4">
+          {entries.map(([key, val], i) => {
+            const isComplex = val !== null && typeof val === 'object'
+            return (
+              <div key={key}>
+                <span className="text-blue-400">"{key}"</span>
+                <span className="text-dark-muted mr-1">:</span>
+                {isComplex ? (
+                  <JsonValue value={val} indent={indent + 1} />
+                ) : (
+                  <>
+                    <JsonValue value={val} indent={indent + 1} />
+                  </>
+                )}
+                {i < entries.length - 1 && <span className="text-dark-muted">,</span>}
+              </div>
+            )
+          })}
+        </div>
+        <span className="text-dark-muted">{'}'}</span>
       </div>
     )
   }
