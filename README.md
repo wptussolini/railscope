@@ -13,7 +13,8 @@ Railscope provides insight into the requests, exceptions, database queries, jobs
 - **Context Correlation** - Link all events from the same request via `request_id`
 - **Sensitive Data Filtering** - Automatic masking of passwords, tokens, and secrets
 - **Dark Mode UI** - Beautiful GitHub-inspired dark interface
-- **Zero Dependencies** - Works with any Rails 7+ application
+- **Storage Backends** - Direct database writes or Redis buffer with batch flush
+- **Zero Dependencies** - Works with any Rails 7+ application (Redis optional)
 
 ## Installation
 
@@ -55,6 +56,9 @@ Create `config/initializers/railscope.rb`:
 
 ```ruby
 Railscope.configure do |config|
+  # Storage backend: :database (default) or :redis (buffer)
+  config.storage_backend = :database
+
   # Data retention (default: 7 days)
   config.retention_days = 30
 
@@ -66,11 +70,49 @@ Railscope.configure do |config|
 end
 ```
 
+### Storage Backends
+
+Railscope supports two storage modes:
+
+| Mode | Write | Read | Requires |
+|------|-------|------|----------|
+| `:database` | Direct INSERT (sync) | PostgreSQL | PostgreSQL |
+| `:redis` | Redis buffer (async) | PostgreSQL | PostgreSQL + Redis |
+
+**`:database`** (default) -- Entries are written directly to PostgreSQL during the request. Simplest setup, no Redis needed.
+
+**`:redis`** -- Entries are buffered in Redis (~0.1ms per write) and batch-flushed to PostgreSQL periodically. Reduces request latency in high-throughput applications.
+
+When using `:redis`, you need to flush the buffer periodically:
+
+```ruby
+# From a background job (Sidekiq, GoodJob, SolidQueue, etc.)
+class RailscopeFlushJob < ApplicationJob
+  queue_as :low
+
+  def perform
+    Railscope::FlushService.call
+  end
+end
+
+# From a cron/scheduler
+every 5.seconds do
+  runner "Railscope::FlushService.call"
+end
+
+# Or via rake
+# $ rake railscope:flush
+```
+
+> **Note:** Entries only appear in the dashboard after being flushed to PostgreSQL.
+
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `RAILSCOPE_ENABLED` | Enable/disable recording | `false` |
+| `RAILSCOPE_STORAGE` | Storage backend (`database` or `redis`) | `database` |
+| `RAILSCOPE_REDIS_URL` | Redis connection URL | Falls back to `REDIS_URL` |
 | `RAILSCOPE_RETENTION_DAYS` | Days to keep entries | `7` |
 
 ## Authorization
@@ -144,6 +186,16 @@ Entries are automatically tagged:
 - **Exceptions**: `exception`, exception class name
 - **Jobs**: `job`, `enqueue`/`perform`, queue name, `failed`
 
+### Rake Tasks
+
+```bash
+# Flush buffered entries from Redis to database (redis mode only)
+rake railscope:flush
+
+# Purge expired entries (older than retention_days)
+rake railscope:purge
+```
+
 ### Purging Old Entries
 
 Run the purge job to remove entries older than `retention_days`:
@@ -212,12 +264,20 @@ Railscope::Entry.expired
 
 Railscope is designed to have minimal impact:
 
-- Events are recorded synchronously but quickly
 - Ignored paths skip all processing
 - Sensitive data filtering is done once before save
 - Purge job removes old entries to control database size
 
+**With `:database` backend:**
+- Entries are written synchronously via INSERT during the request
+
+**With `:redis` backend:**
+- Writes go to Redis (~0.1ms per entry), near-zero impact on request latency
+- `Entry.insert_all` batches up to 1000 records per flush for efficient persistence
+- Flush is safe to run concurrently (Redis `LPOP` is atomic)
+
 For high-traffic production environments, consider:
+- Using `:redis` backend for lower request latency
 - Shorter retention periods
 - Adding high-traffic paths to ignore list
 - Running purge job more frequently
