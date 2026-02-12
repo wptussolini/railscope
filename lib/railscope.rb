@@ -78,7 +78,9 @@ module Railscope
       return nil unless redis_url
 
       require "redis"
-      @redis = Redis.new(url: redis_url)
+      options = { url: redis_url }
+      options[:ssl_params] = { verify_mode: OpenSSL::SSL::VERIFY_NONE } if redis_url.start_with?("rediss://")
+      @redis = Redis.new(**options)
     end
 
     def redis_available?
