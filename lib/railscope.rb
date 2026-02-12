@@ -126,13 +126,15 @@ module Railscope
     end
 
     def ready?
-      return @ready if defined?(@ready) && !@ready.nil?
+      return true if @ready
+
       return false if @checking_ready
 
       @checking_ready = true
-      @ready = storage.ready?
+      result = storage.ready?
+      @ready = true if result
       @checking_ready = false
-      @ready
+      result
     rescue StandardError
       @checking_ready = false
       false
