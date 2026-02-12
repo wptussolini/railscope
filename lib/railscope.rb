@@ -27,7 +27,7 @@ module Railscope
   STORAGE_REDIS = :redis
 
   class << self
-    attr_writer :retention_days, :redis, :storage_backend, :ignore_paths
+    attr_writer :retention_days, :redis, :storage_backend, :ignore_paths, :ignore_jobs, :ignore_commands
     attr_accessor :authenticate_with
 
     def enabled=(value)
@@ -97,6 +97,30 @@ module Railscope
 
     def add_ignore_paths(*paths)
       @ignore_paths = ignore_paths.concat(paths.flatten).uniq
+    end
+
+    def ignore_jobs
+      @ignore_jobs ||= []
+    end
+
+    def add_ignore_jobs(*job_classes)
+      @ignore_jobs = ignore_jobs.concat(job_classes.flatten.map(&:to_s)).uniq
+    end
+
+    def ignore_job?(job_class_name)
+      ignore_jobs.any? { |pattern| job_class_name.match?(pattern) }
+    end
+
+    def ignore_commands
+      @ignore_commands ||= []
+    end
+
+    def add_ignore_commands(*commands)
+      @ignore_commands = ignore_commands.concat(commands.flatten.map(&:to_s)).uniq
+    end
+
+    def ignore_command?(command_name)
+      ignore_commands.any? { |pattern| command_name.match?(pattern) }
     end
 
     def context

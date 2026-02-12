@@ -65,6 +65,15 @@ Railscope.configure do |config|
   # Paths to ignore (defaults: /railscope, /assets, /packs, /cable)
   config.add_ignore_paths("/health", "/ping", "/metrics")
 
+  # Jobs to ignore (class names or regex patterns)
+  config.add_ignore_jobs("SomeFrequentJob", "Turbo::Streams::.*")
+
+  # Rake tasks to ignore (task names or regex patterns)
+  config.add_ignore_commands("db:.*", "assets:.*", "tmp:.*")
+
+  # Use an existing Redis connection (useful for SSL/connection sharing)
+  # config.redis = $redis
+
   # Additional sensitive keys to filter
   config.add_sensitive_keys(:cpf, :ssn, :bank_account)
 end
@@ -208,6 +217,51 @@ Railscope::PurgeJob.perform_now
 Railscope::PurgeJob.perform_later
 ```
 
+## Filtering Entries
+
+### Ignore Paths
+
+Requests matching these path prefixes will not be recorded:
+
+```ruby
+# Defaults: /railscope, /assets, /packs, /cable
+config.add_ignore_paths("/health", "/ping", "/metrics", "/up")
+```
+
+### Ignore Jobs
+
+Background jobs matching these patterns will not be recorded (enqueue, perform, or exceptions). Accepts exact class names or regex patterns:
+
+```ruby
+# Exact match
+config.add_ignore_jobs("HeartbeatJob")
+
+# Regex patterns
+config.add_ignore_jobs("SolidQueue::.*", "Turbo::Streams::.*", "ActionMailbox::.*")
+```
+
+### Ignore Commands
+
+Rake tasks matching these patterns will not be instrumented. Accepts exact task names or regex patterns:
+
+```ruby
+# Exact match
+config.add_ignore_commands("db:migrate")
+
+# Regex patterns — ignore entire namespaces
+config.add_ignore_commands("db:.*", "assets:.*", "tmp:.*", "log:.*")
+```
+
+### Custom Redis Connection
+
+By default, Railscope creates its own Redis connection from `RAILSCOPE_REDIS_URL` or `REDIS_URL`. If your app already has a configured Redis instance (e.g., with SSL on Heroku), you can pass it directly:
+
+```ruby
+config.redis = $redis
+```
+
+This avoids SSL certificate issues and shares the existing connection configuration.
+
 ## Filtered Parameters
 
 Railscope automatically filters sensitive data:
@@ -279,8 +333,11 @@ Railscope is designed to have minimal impact:
 For high-traffic production environments, consider:
 - Using `:redis` backend for lower request latency
 - Shorter retention periods
-- Adding high-traffic paths to ignore list
+- Ignoring noisy paths (`/health`, `/ping`, polling endpoints)
+- Ignoring high-frequency jobs (`SolidQueue::.*`, `Turbo::Streams::.*`)
+- Ignoring routine rake tasks (`db:.*`, `assets:.*`)
 - Running purge job more frequently
+- Using `config.redis = $redis` to share the app's existing Redis connection
 
 ## License
 

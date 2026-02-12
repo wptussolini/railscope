@@ -49,6 +49,28 @@ Railscope.configure do |config|
   #
   # config.add_ignore_paths("/health", "/ping", "/metrics")
 
+  # Ignored Jobs
+  # ------------
+  # Jobs matching these patterns will not be recorded.
+  # Accepts class names or regex patterns.
+  #
+  # config.add_ignore_jobs("SomeFrequentJob", "Turbo::Streams::.*")
+
+  # Ignored Commands
+  # ----------------
+  # Rake tasks matching these patterns will not be recorded.
+  # Accepts task names or regex patterns.
+  #
+  # config.add_ignore_commands("db:.*", "assets:.*", "tmp:.*")
+
+  # Redis Connection
+  # ----------------
+  # By default, Railscope creates its own Redis connection from
+  # RAILSCOPE_REDIS_URL or REDIS_URL. You can pass an existing
+  # Redis instance instead (useful for SSL/connection sharing):
+  #
+  # config.redis = $redis
+
   # Sensitive Keys
   # --------------
   # Additional parameter names to filter from payloads.

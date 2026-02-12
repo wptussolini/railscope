@@ -199,7 +199,7 @@ module Railscope
       end
 
       def ignore_job?(job)
-        job.class.name.start_with?("Railscope::")
+        job.class.name.start_with?("Railscope::") || Railscope.ignore_job?(job.class.name)
       end
 
       def setup_job_context(job)

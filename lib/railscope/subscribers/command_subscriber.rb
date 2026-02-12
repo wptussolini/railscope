@@ -23,6 +23,7 @@ module Railscope
 
         def instrument_task(task)
           return if task.name.start_with?("railscope:")
+          return if Railscope.ignore_command?(task.name)
           return if instrumented_tasks.include?(task.name)
 
           instrumented_tasks << task.name
