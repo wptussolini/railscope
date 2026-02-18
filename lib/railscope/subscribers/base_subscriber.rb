@@ -29,7 +29,7 @@ module Railscope
 
         filtered_payload = Railscope.filter(payload.merge(context_payload))
 
-        Railscope.storage.write(
+        entry_data = {
           entry_type: entry_type,
           batch_id: context.batch_id,
           family_hash: family_hash,
@@ -37,7 +37,13 @@ module Railscope
           payload: filtered_payload,
           tags: (tags + context_tags).uniq,
           occurred_at: Time.current
-        )
+        }
+
+        if Railscope.conditional_recording? && !context.triggered?
+          context.buffer_entry(entry_data)
+        else
+          Railscope.storage.write(**entry_data)
+        end
       end
 
       # Generate a family hash for grouping similar entries

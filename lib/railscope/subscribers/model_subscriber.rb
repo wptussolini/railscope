@@ -42,6 +42,7 @@ module Railscope
         model_name = model.class.name
         return if model_name.nil?
         return if IGNORED_MODEL_PREFIXES.any? { |prefix| model_name.start_with?(prefix) }
+        return unless Railscope.should_track_model?(model_name)
 
         create_entry!(
           entry_type: "model",
@@ -50,6 +51,13 @@ module Railscope
           family_hash: build_family_hash(action, model),
           should_display_on_index: true
         )
+
+        # Conditional recording: flush buffered entries when trigger matches
+        if Railscope.conditional_recording? && !context.triggered? && Railscope.matches_trigger?(model_name, action)
+          context.trigger!
+          context.flush_pending!
+        end
+
         Rails.logger.debug("[Railscope] ModelSubscriber - entry created for #{model_name}")
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record model event: #{e.class}: #{e.message}")

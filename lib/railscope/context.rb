@@ -87,5 +87,30 @@ module Railscope
     end
 
     delegate :empty?, to: :@store
+
+    # Conditional recording: buffer entries until a trigger fires
+
+    def pending_entries
+      self[:pending_entries] ||= []
+    end
+
+    def triggered?
+      self[:triggered] == true
+    end
+
+    def trigger!
+      self[:triggered] = true
+    end
+
+    def buffer_entry(entry_data)
+      pending_entries << entry_data
+    end
+
+    def flush_pending!
+      pending_entries.each do |entry_data|
+        Railscope.storage.write(**entry_data)
+      end
+      pending_entries.clear
+    end
   end
 end

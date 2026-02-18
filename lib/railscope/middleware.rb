@@ -18,17 +18,20 @@ module Railscope
       # Capture response body for recording
       context = Context.current
       if context[:recording]
-        # Read body from env (where Rails stores the response)
-        body_content = extract_body_from_env(env)
+        # In conditional mode, skip persistence if trigger never fired
+        unless Railscope.conditional_recording? && !context.triggered?
+          # Read body from env (where Rails stores the response)
+          body_content = extract_body_from_env(env)
 
-        context_data = {
-          batch_id: context.batch_id,
-          env: env,
-          headers: headers
-        }
+          context_data = {
+            batch_id: context.batch_id,
+            env: env,
+            headers: headers
+          }
 
-        # Update entry with response data
-        update_entry_async(context_data, body_content)
+          # Update entry with response data
+          update_entry_async(context_data, body_content)
+        end
       end
 
       [status, headers, response]

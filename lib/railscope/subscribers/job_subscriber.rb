@@ -76,7 +76,12 @@ module Railscope
         # Also create a separate exception entry if job failed
         create_exception_entry!(job, exception_object) if exception_object
 
-        # Clear context after job completes
+        # In conditional mode: flush if triggered, otherwise entries are discarded with context
+        if Railscope.conditional_recording? && context.triggered?
+          # Response update for jobs is already in the entry payload, nothing extra needed
+        end
+
+        # Clear context after job completes (discards any unflushed buffer)
         Railscope::Context.clear!
       rescue StandardError => e
         Rails.logger.error("[Railscope] Failed to record job perform: #{e.message}")

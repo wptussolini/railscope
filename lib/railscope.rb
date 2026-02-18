@@ -27,7 +27,8 @@ module Railscope
   STORAGE_REDIS = :redis
 
   class << self
-    attr_writer :retention_days, :redis, :storage_backend, :ignore_paths, :ignore_jobs, :ignore_commands
+    attr_writer :retention_days, :redis, :storage_backend, :ignore_paths, :ignore_jobs, :ignore_commands,
+                :ignore_models
     attr_accessor :authenticate_with
 
     def enabled=(value)
@@ -121,6 +122,43 @@ module Railscope
 
     def ignore_command?(command_name)
       ignore_commands.any? { |pattern| command_name.match?(pattern) }
+    end
+
+    # Model filtering (blocklist)
+
+    def ignore_models
+      @ignore_models ||= []
+    end
+
+    def add_ignore_models(*model_names)
+      @ignore_models = ignore_models.concat(model_names.flatten.map(&:to_s)).uniq
+    end
+
+    def should_track_model?(model_name)
+      return false if model_name.nil?
+
+      ignore_models.none? { |pattern| model_name.match?(pattern) }
+    end
+
+    # Conditional recording: only persist a batch when a watched model event fires
+
+    def watch_triggers
+      @watch_triggers ||= []
+    end
+
+    def add_watch_trigger(model_name, on:)
+      actions = Array(on).map(&:to_s)
+      @watch_triggers = watch_triggers.push({ model: model_name.to_s, on: actions }).uniq
+    end
+
+    def conditional_recording?
+      watch_triggers.any?
+    end
+
+    def matches_trigger?(model_name, action)
+      watch_triggers.any? do |trigger|
+        model_name.match?(trigger[:model]) && trigger[:on].include?(action.to_s)
+      end
     end
 
     def context
